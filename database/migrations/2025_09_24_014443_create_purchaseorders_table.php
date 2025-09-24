@@ -19,9 +19,6 @@ return new class extends Migration
             $table->enum('status', ['draft', 'sent', 'approved'])->default('draft');
             $table->text('catatan')->nullable();
             $table->timestamps();
-            
-            $table->foreign('permintaan_id')->references('id')->on('permintaan_barangs')->onDelete('cascade');
-            $table->foreign('purchasing_user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
