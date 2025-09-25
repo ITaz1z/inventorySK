@@ -1,7 +1,7 @@
 <?php
 // File: resources/views/permintaan/index.blade.php
 ?>
-@extends('layouts.dashboard')
+@extends('layouts.app')
 
 @section('title', 'Daftar Permintaan')
 @section('page-title', 'Daftar Permintaan Barang')

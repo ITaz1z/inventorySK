@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends('layouts.app')
 
 @section('title', 'Buat Permintaan Barang')
 @section('page-title', 'Buat Permintaan Barang')
@@ -211,15 +211,14 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-2 justify-content-end">
-                        <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary btn-lg">
-                            <i class="fas fa-times me-2"></i>Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-lg px-4">
-                            <i class="fas fa-paper-plane me-2"></i>Submit Permintaan
-                        </button>
+                      <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>Kirim Permintaan
+                            </button>
                     </div>
                 </form>
             </div>
