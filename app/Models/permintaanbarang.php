@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PermintaanBarang extends Model
+class permintaanbarang extends Model
 {
     use HasFactory;
+
+    // Kalau nama tabel bukan default plural
+    protected $table = 'permintaan_barang';
 
     protected $fillable = [
         'user_id',
@@ -20,12 +23,9 @@ class PermintaanBarang extends Model
         'tanggal_butuh',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'tanggal_butuh' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'tanggal_butuh' => 'datetime',
+    ];
 
     // Relationship: Permintaan barang milik user
     public function user()
@@ -49,6 +49,4 @@ class PermintaanBarang extends Model
     {
         return $this->status === 'approved';
     }
-    
 }
-

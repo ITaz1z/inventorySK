@@ -1,228 +1,184 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('title', 'Dashboard')
+@section('page-title', 'Dashboard')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Dashboard</h1>
-                <span class="badge bg-primary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+<div class="row">
+    <!-- Welcome Card -->
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="fw-bold text-primary mb-1">Selamat Datang, {{ $user->name }}!</h3>
+                        <p class="text-muted mb-0">
+                            Role: <span class="badge bg-primary">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+                        </p>
+                        <small class="text-muted">{{ now()->format('l, d F Y') }}</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-user-circle fa-3x text-primary opacity-50"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    {{-- Stats Cards --}}
-    <div class="row mb-4">
-        @if($user->isAdminGudang())
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Total Permintaan</h6>
-                                <h3 class="mb-0">{{ $total_permintaan ?? 0 }}</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-box fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
+
+    @if($user->isAdminGudang())
+        <!-- Admin Gudang Dashboard -->
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $total_permintaan }}</h2>
+                    <p class="mb-0">Total Permintaan</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-warning mb-1">Pending</h6>
-                                <h3 class="mb-0">{{ $permintaan_pending ?? 0 }}</h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="fas fa-clock fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-clock fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $permintaan_pending }}</h2>
+                    <p class="mb-0">Pending</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-success mb-1">Approved</h6>
-                                <h3 class="mb-0">{{ $permintaan_approved ?? 0 }}</h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="fas fa-check-circle fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-check-circle fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $permintaan_approved }}</h2>
+                    <p class="mb-0">Approved</p>
                 </div>
             </div>
-        @elseif($user->isPurchasing())
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Permintaan Masuk</h6>
-                                <h3 class="mb-0">{{ $total_permintaan_masuk ?? 0 }}</h3>
-                            </div>
-                            <div class="text-info">
-                                <i class="fas fa-inbox fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Total PO</h6>
-                                <h3 class="mb-0">{{ $total_po_dibuat ?? 0 }}</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-file-invoice fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-secondary mb-1">Draft PO</h6>
-                                <h3 class="mb-0">{{ $po_draft ?? 0 }}</h3>
-                            </div>
-                            <div class="text-secondary">
-                                <i class="fas fa-edit fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @else
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Total Permintaan</h6>
-                                <h3 class="mb-0">{{ $total_permintaan ?? 0 }}</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-clipboard-list fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Total PO</h6>
-                                <h3 class="mb-0">{{ $total_po ?? 0 }}</h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="fas fa-shopping-cart fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-warning mb-1">Pending Review</h6>
-                                <h3 class="mb-0">{{ $permintaan_pending ?? 0 }}</h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="fas fa-hourglass-half fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-    </div>
-    
-    {{-- Quick Actions --}}
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Menu Utama</h5>
+        </div>
+
+        <!-- Quick Actions untuk Admin Gudang -->
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        @if($user->isAdminGudang())
-                            <div class="col-md-6 mb-3">
-                                <a href="{{ route('permintaan.index') }}" class="text-decoration-none">
-                                    <div class="card border border-primary h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
-                                            <h5 class="card-title">Kelola Permintaan Barang</h5>
-                                            <p class="card-text text-muted">Buat dan kelola permintaan barang baru</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        @elseif($user->isPurchasing())
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ route('permintaan.index') }}" class="text-decoration-none">
-                                    <div class="card border border-info h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-tasks fa-3x text-info mb-3"></i>
-                                            <h5 class="card-title">Review Permintaan</h5>
-                                            <p class="card-text text-muted">Review permintaan barang masuk</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ route('purchase-orders.index') }}" class="text-decoration-none">
-                                    <div class="card border border-primary h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-file-invoice-dollar fa-3x text-primary mb-3"></i>
-                                            <h5 class="card-title">Kelola Purchase Order</h5>
-                                            <p class="card-text text-muted">Buat dan kelola PO</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        @else
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ route('permintaan.index') }}" class="text-decoration-none">
-                                    <div class="card border border-success h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
-                                            <h5 class="card-title">Monitor Permintaan</h5>
-                                            <p class="card-text text-muted">Pantau semua permintaan barang</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ route('purchase-orders.index') }}" class="text-decoration-none">
-                                    <div class="card border border-primary h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-chart-bar fa-3x text-primary mb-3"></i>
-                                            <h5 class="card-title">Monitor Purchase Order</h5>
-                                            <p class="card-text text-muted">Pantau semua purchase order</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endif
+                        <div class="col-md-6">
+                            <a href="{{ route('permintaan.create') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="fas fa-plus me-2"></i>Buat Permintaan Baru
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ route('permintaan.index') }}" class="btn btn-outline-primary btn-lg w-100 mb-3">
+                                <i class="fas fa-list me-2"></i>Lihat Semua Permintaan
+                            </a>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategori Info -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi</h5>
+                </div>
+                <div class="card-body">
+                    @if($user->role === 'admin_gudang_umum')
+                        <div class="alert alert-info border-0">
+                            <h6 class="fw-bold"><i class="fas fa-boxes me-2"></i>Admin Gudang Umum</h6>
+                            <p class="mb-0">Anda dapat membuat permintaan untuk barang-barang umum seperti: ATK, peralatan kantor, bahan habis pakai, dll.</p>
+                        </div>
+                    @else
+                        <div class="alert alert-warning border-0">
+                            <h6 class="fw-bold"><i class="fas fa-cogs me-2"></i>Admin Gudang Sparepart</h6>
+                            <p class="mb-0">Anda dapat membuat permintaan untuk sparepart mesin, komponen elektronik, dan suku cadang lainnya.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+    @elseif($user->isPurchasing())
+        <!-- Purchasing Dashboard -->
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-inbox fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $total_permintaan_masuk }}</h2>
+                    <p class="mb-0">Permintaan Masuk</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-file-invoice fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $total_po_dibuat }}</h2>
+                    <p class="mb-0">Total PO Dibuat</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-edit fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $po_draft }}</h2>
+                    <p class="mb-0">PO Draft</p>
+                </div>
+            </div>
+        </div>
+
+    @else
+        <!-- Manager Dashboard -->
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $total_permintaan }}</h2>
+                    <p class="mb-0">Total Permintaan</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-file-invoice-dollar fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $total_po }}</h2>
+                    <p class="mb-0">Total PO</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-hourglass-half fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-1">{{ $permintaan_pending }}</h2>
+                    <p class="mb-0">Pending Review</p>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+
+<!-- Recent Activity (untuk semua role) -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Aktivitas Terbaru</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-clock fa-2x mb-3 opacity-50"></i>
+                    <p>Fitur aktivitas terbaru akan segera hadir</p>
                 </div>
             </div>
         </div>

@@ -3,21 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Laravel') }} - Sistem Inventory Terintegrasi</title>
+    <title>{{ config('app.name', 'Laravel') }} - Sistem Inventory</title>
     
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --success: #10b981;
-            --shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #1e40af;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text-light: #64748b;
         }
 
         * {
@@ -27,481 +28,350 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%);
             min-height: 100vh;
-            color: #1e293b;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .bg-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .bg-circle:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .bg-circle:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-
-        .bg-circle:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            top: 10%;
-            right: 30%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+            color: white;
         }
 
         /* Header */
-        .welcome-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.1);
+        .navbar {
+            background: rgba(15, 23, 42, 0.9) !important;
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 0;
-            z-index: 100;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
         }
 
-        .nav-link-custom {
+        .navbar-brand {
             color: white !important;
-            text-decoration: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
             font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
             transition: all 0.3s ease;
-            margin: 0 0.25rem;
         }
 
-        .nav-link-custom:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.2);
             color: white !important;
         }
 
-        .nav-link-primary {
+        .btn-primary-nav {
             background: var(--primary) !important;
+            border: none !important;
             color: white !important;
         }
 
-        .nav-link-primary:hover {
+        .btn-primary-nav:hover {
             background: var(--primary-dark) !important;
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
         }
 
-        /* Main content */
-        .welcome-main {
-            padding-top: 100px;
+        /* Main Content */
+        .hero-section {
+            padding: 120px 0 80px;
             min-height: 100vh;
             display: flex;
             align-items: center;
         }
 
-        .welcome-title {
+        .hero-title {
             font-size: 3.5rem;
             font-weight: 700;
-            color: white;
             margin-bottom: 1.5rem;
             line-height: 1.2;
         }
 
-        .welcome-subtitle {
+        .hero-subtitle {
             font-size: 1.25rem;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 2.5rem;
         }
 
         .feature-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            color: white;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
-            transition: transform 0.3s ease;
-        }
-
-        .feature-item:hover {
-            transform: translateX(10px);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.95);
         }
 
         .feature-icon {
-            width: 24px;
-            height: 24px;
-            background: var(--success);
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
             border-radius: 50%;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .feature-icon::after {
-            content: "✓";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
         }
 
-        .btn-primary-custom {
-            background: var(--primary);
-            color: white;
+        .btn-hero {
             padding: 1rem 2rem;
-            border-radius: 16px;
-            text-decoration: none;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 1.1rem;
+            text-decoration: none;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            box-shadow: var(--shadow);
             border: none;
         }
 
-        .btn-primary-custom:hover {
+        .btn-hero-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-hero-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
-            color: white;
-            text-decoration: none;
-        }
-
-        .btn-secondary-custom {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 16px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-secondary-custom:hover {
-            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
             color: white;
             text-decoration: none;
         }
 
-        .visual-card {
-            background: rgba(255, 255, 255, 0.1);
+        .btn-hero-secondary {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(30, 64, 175, 0.3);
+            border-color: var(--primary);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 3rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow);
+            border-radius: 16px;
+            padding: 2.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
             text-align: center;
-            position: relative;
-            overflow: hidden;
             height: 100%;
         }
 
-        .visual-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: rotate 4s linear infinite;
-        }
-
-        .visual-card h2,
-        .visual-card p {
-            position: relative;
-            z-index: 2;
-        }
-
-        .visual-card h2 {
-            font-size: 2.5rem;
+        .info-card h3 {
+            font-size: 2rem;
             font-weight: 700;
-            color: white;
             margin-bottom: 1rem;
         }
 
-        .visual-card p {
-            font-size: 1.1rem;
+        .info-card p {
             color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .stats-grid {
+        .stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            position: relative;
-            z-index: 2;
+            gap: 1rem;
         }
 
         .stat-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
             text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.1);
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--success);
-            margin-bottom: 0.5rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
         }
 
         .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .welcome-title {
+            .hero-title {
                 font-size: 2.5rem;
             }
-
-            .welcome-subtitle {
+            
+            .hero-subtitle {
                 font-size: 1.1rem;
             }
-
-            .visual-card {
+            
+            .info-card {
                 padding: 2rem;
                 margin-top: 2rem;
             }
-
-            .stats-grid {
+            
+            .stats {
                 grid-template-columns: 1fr;
             }
         }
 
-        /* Animation classes */
-        .slide-in-left {
-            animation: slideInLeft 1s ease-out;
-        }
-
-        .slide-in-right {
-            animation: slideInRight 1s ease-out;
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
+        @media (max-width: 576px) {
+            .hero-section {
+                padding: 100px 0 60px;
             }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
+            
+            .btn-hero {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="bg-animation">
-        <div class="bg-circle"></div>
-        <div class="bg-circle"></div>
-        <div class="bg-circle"></div>
-    </div>
-
-    <!-- Header -->
-    <header class="welcome-header">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            @if (Route::has('login'))
-                <nav class="d-flex justify-content-end">
+            <a class="navbar-brand" href="#">🔷 Inventory SK</a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="nav-link-custom nav-link-primary">
-                            🏠 Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="nav-link-custom">
-                            🔐 Log in
-                        </a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="nav-link-custom nav-link-primary">
-                                ✨ Register
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary-nav" href="{{ url('/dashboard') }}">
+                                Dashboard
                             </a>
-                        @endif
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary-nav" href="{{ route('login') }}">
+                                Login
+                            </a>
+                        </li>
                     @endauth
-                </nav>
-            @endif
+                </ul>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="welcome-main">
+    <!-- Hero Section -->
+    <section class="hero-section">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6 slide-in-left">
-                    <h1 class="welcome-title">Sistem Inventory SK</h1>
-                    <p class="welcome-subtitle">
-                        Sistem manajemen inventory PT.Sumatera Kemasindo yang terintegrasi untuk permintaan barang dan purchase order hingga laporan akhir. 
-                        Solusi digital terpadu untuk efisiensi operasional gudang dan purchasing.
+                <div class="col-lg-6">
+                    <h1 class="hero-title">Sistem Inventory SK</h1>
+                    <p class="hero-subtitle">
+                        Sistem manajemen inventory terintegrasi untuk PT. Sumatera Kemasindo. 
+                        Kelola permintaan barang, purchase order, dan monitoring dalam satu platform.
+                        <strong>Hanya untuk karyawan terdaftar.</strong>
                     </p>
                     
-                    <div class="mb-4">
-                        <div class="feature-item">
-                            <span class="feature-icon"></span>
-                            <span class="feature-text">
-                                Manajemen Permintaan Barang untuk Admin Gudang
-                            </span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon"></span>
-                            <span class="feature-text">
-                                Review dan Approval untuk Tim Purchasing
-                            </span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon"></span>
-                            <span class="feature-text">
-                                Dashboard Monitoring untuk Management
-                            </span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon"></span>
-                            <span class="feature-text">
-                                Tracking Real-time dan Reporting Otomatis
-                            </span>
-                        </div>
-                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span class="feature-icon">👤</span>
+                            <span>Khusus Karyawan Terdaftar</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Manajemen Permintaan Barang</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Review dan Approval Process</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Dashboard Monitoring Real-time</span>
+                        </li>
+                    </ul>
                     
-                    <div class="d-flex gap-3 flex-wrap">
-                        @guest
-                            <a href="{{ route('login') }}" class="btn-primary-custom">
-                                🚀 Masuk ke Sistem
+                    <div class="d-flex flex-column flex-md-row gap-3">
+                        @auth
+                            <a href="{{ route('dashboard') }}" class="btn-hero btn-hero-primary">
+                                🏠 Dashboard
                             </a>
                         @else
-                            <a href="{{ route('dashboard') }}" class="btn-primary-custom">
-                                🏠 Ke Dashboard
+                            <a href="{{ route('login') }}" class="btn-hero btn-hero-primary">
+                                🔐 Login Sistem
                             </a>
-                        @endguest
-                        <a href="#features" class="btn-secondary-custom">
-                            📖 Pelajari Lebih Lanjut
+                        @endauth
+                        <a href="#info" class="btn-hero btn-hero-secondary">
+                            📖 Info Sistem
                         </a>
                     </div>
                 </div>
                 
-                <div class="col-lg-6 slide-in-right">
-                    <div class="visual-card">
-                        <h2>📦 Inventory SK</h2>
-                        <p>Sistem Manajemen Inventory Terintegrasi</p>
+                <div class="col-lg-6">
+                    <div class="info-card" id="info">
+                        <h3>🔐 Sistem Internal</h3>
+                        <p>Platform manajemen inventory khusus untuk karyawan PT. Sumatera Kemasindo. Akses terbatas hanya untuk pengguna yang telah terdaftar dalam sistem.</p>
                         
-                        <div class="stats-grid">
+                        <div class="stats">
                             <div class="stat-item">
-                                <div class="stat-number">24/7</div>
-                                <div class="stat-label">Monitoring</div>
+                                <div class="stat-number">Staff</div>
+                                <div class="stat-label">Only</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-number">100%</div>
-                                <div class="stat-label">Digital</div>
+                                <div class="stat-number">Secure</div>
+                                <div class="stat-label">Access</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-number">Real-time</div>
-                                <div class="stat-label">Updates</div>
+                                <div class="stat-number">Real</div>
+                                <div class="stat-label">Time</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-number">Multi</div>
-                                <div class="stat-label">User Role</div>
+                                <div class="stat-number">Fast</div>
+                                <div class="stat-label">Process</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </section>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Add interactive effects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Parallax effect for background circles
-            document.addEventListener('mousemove', function(e) {
-                const circles = document.querySelectorAll('.bg-circle');
-                const x = e.clientX / window.innerWidth;
-                const y = e.clientY / window.innerHeight;
-                
-                circles.forEach((circle, index) => {
-                    const speed = (index + 1) * 0.5;
-                    const xPos = (x * speed * 50) - 25;
-                    const yPos = (y * speed * 50) - 25;
-                    circle.style.transform = `translate(${xPos}px, ${yPos}px)`;
-                });
+        // Simple smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
             });
+        });
 
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-
-            // Add loading animation to buttons
-            document.querySelectorAll('.btn-primary-custom').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    if (this.href && !this.href.includes('#')) {
-                        this.innerHTML = '⏳ Loading...';
-                    }
-                });
+        // Loading state for navigation buttons
+        document.querySelectorAll('.btn-hero-primary').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.href && !this.href.includes('#')) {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '⏳ Loading...';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 3000);
+                }
             });
         });
     </script>
