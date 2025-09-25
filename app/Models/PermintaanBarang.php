@@ -1,16 +1,17 @@
 <?php
+// File: app/Models/PermintaanBarang.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class permintaanbarang extends Model
+class PermintaanBarang extends Model
 {
     use HasFactory;
 
-    // Kalau nama tabel bukan default plural
-    protected $table = 'permintaan_barang';
+    // Explicitly define table name (untuk memastikan)
+    protected $table = 'permintaan_barangs';
 
     protected $fillable = [
         'user_id',

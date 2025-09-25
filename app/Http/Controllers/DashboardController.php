@@ -1,6 +1,6 @@
 <?php
 // File: app/Http/Controllers/DashboardController.php
-// Copy ini ke file app/Http/Controllers/DashboardController.php
+// Replace seluruh content dengan ini
 
 namespace App\Http\Controllers;
 
@@ -43,6 +43,13 @@ class DashboardController extends Controller
                 $data['total_permintaan'] = PermintaanBarang::count();
                 $data['total_po'] = PurchaseOrder::count();
                 $data['permintaan_pending'] = PermintaanBarang::where('status', 'pending')->count();
+                break;
+                
+            default:
+                // Fallback untuk role yang tidak dikenali
+                $data['total_permintaan'] = 0;
+                $data['permintaan_pending'] = 0;
+                $data['permintaan_approved'] = 0;
                 break;
         }
 
