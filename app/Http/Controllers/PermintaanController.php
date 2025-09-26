@@ -117,7 +117,7 @@ class PermintaanController extends Controller
             }
         ]);
 
-        return view('permintaan.show', compact('permintaan'));
+        return view('permintaan.manage-items', compact('permintaan'));
     }
 
     // Form edit header permintaan

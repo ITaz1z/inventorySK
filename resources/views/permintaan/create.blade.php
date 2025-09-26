@@ -1,29 +1,31 @@
 {{-- File: resources/views/permintaan/create.blade.php --}}
+{{-- Form Create Permintaan - COMPLETE VERSION --}}
 @extends('layouts.app')
 
-@section('title', 'Buat Permintaan Barang Baru')
+@section('title', 'Buat Permintaan Baru')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0">
-                <i class="fas fa-plus-circle text-primary me-2"></i>
-                Buat Permintaan Barang Baru
-            </h2>
-            <p class="text-muted mb-0">Buat permintaan barang untuk kebutuhan gudang</p>
+<div class="container-fluid py-4">
+    
+    {{-- Simple Header --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">📋 Buat Permintaan Baru</h3>
+                    <p class="text-muted mb-0">Isi informasi dasar permintaan, lalu tambahkan barang di halaman berikutnya</p>
+                </div>
+                <a href="{{ route('permintaan.index') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
         </div>
-        <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar
-        </a>
     </div>
 
-    <!-- Alert Errors -->
+    {{-- Error Alert --}}
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Terjadi kesalahan:</strong>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <strong>⚠️ Periksa kembali:</strong>
             <ul class="mb-0 mt-2">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -33,319 +35,291 @@
         </div>
     @endif
 
-    <!-- Form Card -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-file-alt me-2"></i>
-                Informasi Permintaan
-            </h5>
-        </div>
-
-        <form action="{{ route('permintaan.store') }}" method="POST" id="form-permintaan">
-            @csrf
-            
-            <div class="card-body">
-                <div class="row">
-                    <!-- Judul Permintaan -->
-                    <div class="col-md-8 mb-3">
-                        <label for="judul_permintaan" class="form-label">
-                            <i class="fas fa-heading text-primary me-1"></i>
-                            Judul Permintaan <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" 
-                               class="form-control @error('judul_permintaan') is-invalid @enderror" 
-                               id="judul_permintaan" 
-                               name="judul_permintaan" 
-                               value="{{ old('judul_permintaan') }}"
-                               placeholder="Contoh: Permintaan ATK Bulan Januari 2024"
-                               maxlength="255"
-                               required>
-                        @error('judul_permintaan')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Berikan judul yang jelas dan mudah dipahami
-                        </div>
-                    </div>
-
-                    <!-- Tingkat Prioritas -->
-                    <div class="col-md-4 mb-3">
-                        <label for="tingkat_prioritas" class="form-label">
-                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-                            Tingkat Prioritas <span class="text-danger">*</span>
-                        </label>
-                        <select class="form-select @error('tingkat_prioritas') is-invalid @enderror" 
-                                id="tingkat_prioritas" 
-                                name="tingkat_prioritas" 
-                                required>
-                            <option value="">Pilih Prioritas</option>
-                            <option value="urgent" {{ old('tingkat_prioritas') == 'urgent' ? 'selected' : '' }}>
-                                🔴 Sangat Urgent
-                            </option>
-                            <option value="penting" {{ old('tingkat_prioritas') == 'penting' ? 'selected' : '' }}>
-                                🟡 Penting
-                            </option>
-                            <option value="routine" {{ old('tingkat_prioritas') == 'routine' ? 'selected' : '' }}>
-                                🟢 Rutin
-                            </option>
-                            <option value="non_routine" {{ old('tingkat_prioritas') == 'non_routine' ? 'selected' : '' }}>
-                                🔵 Non Rutin
-                            </option>
-                        </select>
-                        @error('tingkat_prioritas')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Tanggal Dibutuhkan -->
-                    <div class="col-md-4 mb-3">
-                        <label for="tanggal_dibutuhkan" class="form-label">
-                            <i class="fas fa-calendar-alt text-success me-1"></i>
-                            Tanggal Dibutuhkan <span class="text-danger">*</span>
-                        </label>
-                        <input type="date" 
-                               class="form-control @error('tanggal_dibutuhkan') is-invalid @enderror" 
-                               id="tanggal_dibutuhkan" 
-                               name="tanggal_dibutuhkan" 
-                               value="{{ old('tanggal_dibutuhkan') }}"
-                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                               required>
-                        @error('tanggal_dibutuhkan')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Minimal H+1 dari hari ini
-                        </div>
-                    </div>
-
-                    <!-- Info Pemohon -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-user text-info me-1"></i>
-                            Pemohon
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               value="{{ auth()->user()->name }}" 
-                               readonly>
-                        <div class="form-text">
-                            <i class="fas fa-id-badge me-1"></i>
-                            {{ auth()->user()->getRoleLabel() }}
-                        </div>
-                    </div>
-
-                    <!-- Kategori Barang -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-tags text-secondary me-1"></i>
-                            Kategori Barang
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               value="{{ ucfirst(auth()->user()->getGudangKategori()) }}" 
-                               readonly>
-                        <div class="form-text">
-                            <i class="fas fa-warehouse me-1"></i>
-                            Otomatis berdasarkan role Anda
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Catatan Permintaan -->
-                <div class="mb-3">
-                    <label for="catatan_permintaan" class="form-label">
-                        <i class="fas fa-sticky-note text-warning me-1"></i>
-                        Catatan Permintaan
-                        <small class="text-muted">(Opsional)</small>
-                    </label>
-                    <textarea class="form-control @error('catatan_permintaan') is-invalid @enderror" 
-                              id="catatan_permintaan" 
-                              name="catatan_permintaan" 
-                              rows="4"
-                              placeholder="Tuliskan catatan tambahan, alasan khusus, atau detail lainnya yang perlu diketahui...">{{ old('catatan_permintaan') }}</textarea>
-                    @error('catatan_permintaan')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <div class="form-text">
-                        <i class="fas fa-lightbulb me-1"></i>
-                        Jelaskan alasan permintaan, spesifikasi khusus, atau informasi penting lainnya
-                    </div>
-                </div>
-
-                <!-- Info Box -->
-                <div class="alert alert-info border-left-info">
-                    <div class="d-flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle fa-2x text-info"></i>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="alert-heading mb-2">Langkah Selanjutnya</h6>
-                            <p class="mb-2">Setelah membuat permintaan ini, Anda akan dapat:</p>
-                            <ul class="mb-0">
-                                <li>Menambahkan item-item barang yang dibutuhkan</li>
-                                <li>Mengatur urutan prioritas item</li>
-                                <li>Mengunggah gambar untuk item tertentu</li>
-                                <li>Mengirim permintaan untuk review</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Footer with Actions -->
-            <div class="card-footer bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="text-muted">
-                        <i class="fas fa-asterisk text-danger me-1" style="font-size: 0.7em;"></i>
-                        <small>Field yang bertanda * wajib diisi</small>
-                    </div>
+    {{-- Main Form Card --}}
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
                     
-                    <div class="btn-group">
-                        <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Simpan & Lanjutkan
-                        </button>
-                    </div>
+                    <form action="{{ route('permintaan.store') }}" method="POST" id="formPermintaan">
+                        @csrf
+
+                        {{-- Info Box Top --}}
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Langkah 1 dari 2:</strong> Isi informasi dasar permintaan ini dulu. 
+                            Setelah disimpan, Anda bisa menambahkan barang-barang yang dibutuhkan.
+                        </div>
+
+                        {{-- Judul Permintaan --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                📝 Judul Permintaan <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="judul_permintaan" 
+                                   class="form-control form-control-lg @error('judul_permintaan') is-invalid @enderror" 
+                                   value="{{ old('judul_permintaan') }}"
+                                   placeholder="Contoh: Permintaan ATK Bulan Oktober 2025"
+                                   required>
+                            @error('judul_permintaan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Buat judul yang jelas agar mudah dicari nanti</small>
+                        </div>
+
+                        <div class="row">
+                            {{-- Tanggal Permintaan --}}
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-bold">
+                                    📋 Tanggal Permintaan <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                       name="tanggal_permintaan" 
+                                       class="form-control @error('tanggal_permintaan') is-invalid @enderror" 
+                                       value="{{ old('tanggal_permintaan', date('Y-m-d')) }}"
+                                       readonly>
+                                @error('tanggal_permintaan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">Hari ini (otomatis)</small>
+                            </div>
+
+                            {{-- Tanggal Dibutuhkan --}}
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-bold">
+                                    📅 Kapan Dibutuhkan? <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                       name="tanggal_dibutuhkan" 
+                                       class="form-control @error('tanggal_dibutuhkan') is-invalid @enderror" 
+                                       value="{{ old('tanggal_dibutuhkan') }}"
+                                       min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                       required>
+                                @error('tanggal_dibutuhkan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">Minimal besok (H+1)</small>
+                            </div>
+
+                            {{-- Tingkat Prioritas --}}
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-bold">
+                                    ⚡ Seberapa Urgent? <span class="text-danger">*</span>
+                                </label>
+                                <select name="tingkat_prioritas" 
+                                        class="form-select @error('tingkat_prioritas') is-invalid @enderror" 
+                                        required>
+                                    <option value="">-- Pilih Prioritas --</option>
+                                    <option value="urgent" {{ old('tingkat_prioritas') == 'urgent' ? 'selected' : '' }}>
+                                        🔴 Sangat Urgent
+                                    </option>
+                                    <option value="penting" {{ old('tingkat_prioritas') == 'penting' ? 'selected' : '' }}>
+                                        🟡 Penting
+                                    </option>
+                                    <option value="routine" {{ old('tingkat_prioritas') == 'routine' ? 'selected' : '' }}>
+                                        🟢 Rutin
+                                    </option>
+                                    <option value="non_routine" {{ old('tingkat_prioritas') == 'non_routine' ? 'selected' : '' }}>
+                                        🔵 Non Rutin
+                                    </option>
+                                </select>
+                                @error('tingkat_prioritas')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Catatan (Optional) --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                💬 Catatan Tambahan <span class="text-muted">(opsional)</span>
+                            </label>
+                            <textarea name="catatan_permintaan" 
+                                      class="form-control" 
+                                      rows="4"
+                                      placeholder="Tuliskan alasan, konteks, atau informasi penting lainnya...">{{ old('catatan_permintaan') }}</textarea>
+                            <small class="form-text text-muted">Jelaskan kenapa barang ini dibutuhkan</small>
+                        </div>
+
+                        {{-- Info Pemohon (Read-only) --}}
+                        <div class="card bg-light mb-4">
+                            <div class="card-body py-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Pemohon:</small>
+                                        <strong>{{ auth()->user()->name }}</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Kategori:</small>
+                                        <strong>{{ ucfirst(auth()->user()->getGudangKategori()) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-arrow-right"></i> Lanjut ke Tambah Barang
+                            </button>
+                        </div>
+
+                    </form>
+
                 </div>
             </div>
-        </form>
+
+            {{-- Help Card --}}
+            <div class="card mt-3 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="mb-2">💡 Tips:</h6>
+                    <ul class="mb-0 small">
+                        <li>Satu permintaan bisa berisi banyak barang</li>
+                        <li>Barang akan ditambahkan di halaman berikutnya</li>
+                        <li>Permintaan masih bisa diedit sebelum disubmit</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
     </div>
+
 </div>
 
-@push('styles')
-    <style>
-        .border-left-info {
-            border-left: 4px solid #36b9cc !important;
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Auto focus
+    $('input[name="judul_permintaan"]').focus();
+    
+    // Set minimum date untuk tanggal dibutuhkan
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+    $('input[name="tanggal_dibutuhkan"]').attr('min', minDate);
+    
+    // Visual feedback untuk prioritas
+    $('select[name="tingkat_prioritas"]').on('change', function() {
+        const val = $(this).val();
+        $(this).removeClass('border-danger border-warning border-success border-info');
+        
+        if (val === 'urgent') {
+            $(this).addClass('border-danger');
+        } else if (val === 'penting') {
+            $(this).addClass('border-warning');
+        } else if (val === 'routine') {
+            $(this).addClass('border-success');
+        } else if (val === 'non_routine') {
+            $(this).addClass('border-info');
+        }
+    });
+    
+    // Konfirmasi submit
+    $('#formPermintaan').on('submit', function(e) {
+        const judul = $('input[name="judul_permintaan"]').val().trim();
+        const tanggalDibutuhkan = $('input[name="tanggal_dibutuhkan"]').val();
+        const prioritas = $('select[name="tingkat_prioritas"]').val();
+        
+        if (!judul || !tanggalDibutuhkan || !prioritas) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Data Belum Lengkap',
+                text: 'Mohon lengkapi semua field yang wajib diisi (bertanda *)',
+                confirmButtonText: 'OK'
+            });
+            return false;
         }
         
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
+        // Validasi tanggal
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(tanggalDibutuhkan);
         
-        .card {
-            border: none;
-            border-radius: 10px;
+        if (selectedDate <= today) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Tanggal Tidak Valid',
+                text: 'Tanggal dibutuhkan harus minimal besok (H+1)',
+                confirmButtonText: 'OK'
+            });
+            return false;
         }
-        
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-        }
-        
-        .btn {
-            border-radius: 6px;
-        }
-        
-        .alert {
-            border-radius: 8px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #5a5c69;
-        }
-        
-        .text-danger {
-            color: #e74a3b !important;
-        }
-    </style>
+    });
+});
+</script>
 @endpush
 
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-            // Auto focus pada field pertama
-            $('#judul_permintaan').focus();
-            
-            // Validasi tanggal minimal H+1
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            const minDate = tomorrow.toISOString().split('T')[0];
-            $('#tanggal_dibutuhkan').attr('min', minDate);
-            
-            // Preview prioritas dengan warna
-            $('#tingkat_prioritas').on('change', function() {
-                const select = $(this);
-                const value = select.val();
-                
-                // Reset classes
-                select.removeClass('border-danger border-warning border-success border-info');
-                
-                // Add appropriate border color
-                switch(value) {
-                    case 'urgent':
-                        select.addClass('border-danger');
-                        break;
-                    case 'penting':
-                        select.addClass('border-warning');
-                        break;
-                    case 'routine':
-                        select.addClass('border-success');
-                        break;
-                    case 'non_routine':
-                        select.addClass('border-info');
-                        break;
-                }
-            });
-            
-            // Form validation sebelum submit
-            $('#form-permintaan').on('submit', function(e) {
-                const judul = $('#judul_permintaan').val().trim();
-                const tanggal = $('#tanggal_dibutuhkan').val();
-                const prioritas = $('#tingkat_prioritas').val();
-                
-                if (!judul || !tanggal || !prioritas) {
-                    e.preventDefault();
-                    
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Data Tidak Lengkap',
-                        text: 'Mohon lengkapi semua field yang wajib diisi',
-                        confirmButtonText: 'OK'
-                    });
-                    
-                    return false;
-                }
-                
-                // Konfirmasi sebelum submit
-                e.preventDefault();
-                
-                Swal.fire({
-                    icon: 'question',
-                    title: 'Konfirmasi',
-                    text: 'Apakah Anda yakin ingin membuat permintaan ini?',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Buat',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#007bff'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Show loading
-                        Swal.fire({
-                            title: 'Memproses...',
-                            text: 'Mohon tunggu sebentar',
-                            allowOutsideClick: false,
-                            showConfirmButton: false,
-                            willOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-                        
-                        // Submit form
-                        this.submit();
-                    }
-                });
-            });
-        });
-    </script>
+@push('styles')
+<style>
+    .form-control-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-label.fw-bold {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .form-control[readonly] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+    
+    .form-select.border-danger {
+        border-color: #dc3545 !important;
+        border-width: 2px;
+    }
+    
+    .form-select.border-warning {
+        border-color: #ffc107 !important;
+        border-width: 2px;
+    }
+    
+    .form-select.border-success {
+        border-color: #28a745 !important;
+        border-width: 2px;
+    }
+    
+    .form-select.border-info {
+        border-color: #17a2b8 !important;
+        border-width: 2px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(180deg, #224abe 0%, #1a3a9e 100%);
+        transform: translateY(-1px);
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+</style>
 @endpush
+@endsection
