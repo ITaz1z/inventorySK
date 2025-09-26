@@ -1,0 +1,369 @@
+// File: resources/sass/permintaan/form.scss
+// SCSS untuk form permintaan barang
+
+// Variables
+$primary-color: #007bff;
+$danger-color: #e74a3b;
+$warning-color: #f39c12;
+$success-color: #28a745;
+$info-color: #36b9cc;
+$secondary-color: #6c757d;
+$light-color: #f8f9fc;
+$dark-color: #5a5c69;
+
+$border-radius: 10px;
+$border-radius-sm: 6px;
+$border-radius-lg: 8px;
+$shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+$shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+
+// Form Permintaan Styles
+.form-permintaan {
+  .container-fluid {
+    padding: 20px;
+  }
+
+  // Header Section
+  .page-header {
+    margin-bottom: 2rem;
+    
+    h2 {
+      color: $dark-color;
+      font-weight: 600;
+      font-size: 1.75rem;
+      
+      i {
+        color: $primary-color;
+      }
+    }
+    
+    p {
+      color: $secondary-color;
+      font-size: 1rem;
+      margin-bottom: 0;
+    }
+  }
+
+  // Alert Styles
+  .alert {
+    border-radius: $border-radius-lg;
+    border: none;
+    
+    &.alert-danger {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      
+      i {
+        color: $danger-color;
+      }
+    }
+    
+    &.alert-info {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      color: #0c5460;
+      
+      &.border-left-info {
+        border-left: 4px solid $info-color !important;
+        
+        .alert-heading {
+          color: $info-color;
+          font-weight: 600;
+        }
+      }
+    }
+    
+    ul {
+      padding-left: 1.2rem;
+      
+      li {
+        margin-bottom: 0.3rem;
+      }
+    }
+  }
+
+  // Card Styles
+  .card {
+    border: none;
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    overflow: hidden;
+    
+    .card-header {
+      background: linear-gradient(135deg, $primary-color 0%, #0056b3 100%);
+      border-bottom: none;
+      padding: 1rem 1.5rem;
+      
+      .card-title {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        
+        i {
+          opacity: 0.9;
+        }
+      }
+    }
+    
+    .card-body {
+      padding: 2rem;
+      background: white;
+    }
+    
+    .card-footer {
+      background: $light-color;
+      border-top: 1px solid #e3e6f0;
+      padding: 1rem 2rem;
+    }
+  }
+
+  // Form Elements
+  .form-label {
+    font-weight: 600;
+    color: $dark-color;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    
+    i {
+      margin-right: 0.3rem;
+      opacity: 0.8;
+    }
+    
+    .text-danger {
+      color: $danger-color !important;
+      font-weight: 700;
+    }
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid #e3e6f0;
+    border-radius: $border-radius-sm;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.15s ease-in-out;
+    
+    &:focus {
+      border-color: rgba($primary-color, 0.6);
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+      outline: none;
+    }
+    
+    &.is-invalid {
+      border-color: $danger-color;
+      box-shadow: 0 0 0 0.2rem rgba($danger-color, 0.25);
+    }
+    
+    &[readonly] {
+      background-color: #f8f9fa;
+      border-color: #e9ecef;
+      color: $secondary-color;
+    }
+  }
+
+  .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    
+    option {
+      padding: 0.5rem;
+    }
+  }
+
+  .form-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.3rem;
+    
+    i {
+      opacity: 0.8;
+    }
+  }
+
+  .invalid-feedback {
+    font-size: 0.85rem;
+    color: $danger-color;
+    font-weight: 500;
+    margin-top: 0.3rem;
+  }
+
+  // Priority Select Styling
+  .form-select {
+    &.border-danger {
+      border-color: $danger-color !important;
+    }
+    
+    &.border-warning {
+      border-color: $warning-color !important;
+    }
+    
+    &.border-success {
+      border-color: $success-color !important;
+    }
+    
+    &.border-info {
+      border-color: $info-color !important;
+    }
+  }
+
+  // Button Styles
+  .btn {
+    border-radius: $border-radius-sm;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.15s ease-in-out;
+    
+    i {
+      margin-right: 0.4rem;
+    }
+    
+    &.btn-primary {
+      background: linear-gradient(135deg, $primary-color 0%, #0056b3 100%);
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba($primary-color, 0.3);
+      }
+    }
+    
+    &.btn-outline-secondary {
+      border: 2px solid #e3e6f0;
+      color: $secondary-color;
+      
+      &:hover {
+        background: $secondary-color;
+        border-color: $secondary-color;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  // Button Group
+  .btn-group {
+    .btn {
+      margin-left: 0.5rem;
+      
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+
+  // Info Section
+  .info-section {
+    .flex-shrink-0 {
+      i {
+        color: $info-color;
+        opacity: 0.8;
+      }
+    }
+    
+    .alert-heading {
+      color: $info-color;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    ul {
+      color: #0c5460;
+      
+      li {
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  // Footer Note
+  .footer-note {
+    .text-muted {
+      font-size: 0.85rem;
+      
+      .fa-asterisk {
+        font-size: 0.7em;
+        color: $danger-color;
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 15px;
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .card-footer {
+      padding: 1rem 1.5rem;
+      
+      .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+        
+        .btn-group {
+          align-self: stretch;
+          
+          .btn {
+            flex: 1;
+            margin: 0 0.25rem;
+          }
+        }
+      }
+    }
+    
+    .page-header {
+      .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+        
+        .btn {
+          align-self: start;
+        }
+      }
+    }
+  }
+
+  // Animation Classes
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Custom Scrollbar untuk textarea
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+}

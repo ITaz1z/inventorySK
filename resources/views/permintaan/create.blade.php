@@ -1,247 +1,351 @@
+{{-- File: resources/views/permintaan/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Buat Permintaan Barang')
-@section('page-title', 'Buat Permintaan Barang')
+@section('title', 'Buat Permintaan Barang Baru')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <!-- Back Button -->
-        <div class="mb-4">
-            <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar
-            </a>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-plus-circle text-primary me-2"></i>
+                Buat Permintaan Barang Baru
+            </h2>
+            <p class="text-muted mb-0">Buat permintaan barang untuk kebutuhan gudang</p>
+        </div>
+        <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar
+        </a>
+    </div>
+
+    <!-- Alert Errors -->
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Terjadi kesalahan:</strong>
+            <ul class="mb-0 mt-2">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <!-- Form Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-file-alt me-2"></i>
+                Informasi Permintaan
+            </h5>
         </div>
 
-        <!-- Form Card -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-plus-circle me-2"></i>
-                    <h5 class="mb-0">Form Permintaan Barang Baru</h5>
+        <form action="{{ route('permintaan.store') }}" method="POST" id="form-permintaan">
+            @csrf
+            
+            <div class="card-body">
+                <div class="row">
+                    <!-- Judul Permintaan -->
+                    <div class="col-md-8 mb-3">
+                        <label for="judul_permintaan" class="form-label">
+                            <i class="fas fa-heading text-primary me-1"></i>
+                            Judul Permintaan <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control @error('judul_permintaan') is-invalid @enderror" 
+                               id="judul_permintaan" 
+                               name="judul_permintaan" 
+                               value="{{ old('judul_permintaan') }}"
+                               placeholder="Contoh: Permintaan ATK Bulan Januari 2024"
+                               maxlength="255"
+                               required>
+                        @error('judul_permintaan')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Berikan judul yang jelas dan mudah dipahami
+                        </div>
+                    </div>
+
+                    <!-- Tingkat Prioritas -->
+                    <div class="col-md-4 mb-3">
+                        <label for="tingkat_prioritas" class="form-label">
+                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                            Tingkat Prioritas <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select @error('tingkat_prioritas') is-invalid @enderror" 
+                                id="tingkat_prioritas" 
+                                name="tingkat_prioritas" 
+                                required>
+                            <option value="">Pilih Prioritas</option>
+                            <option value="urgent" {{ old('tingkat_prioritas') == 'urgent' ? 'selected' : '' }}>
+                                🔴 Sangat Urgent
+                            </option>
+                            <option value="penting" {{ old('tingkat_prioritas') == 'penting' ? 'selected' : '' }}>
+                                🟡 Penting
+                            </option>
+                            <option value="routine" {{ old('tingkat_prioritas') == 'routine' ? 'selected' : '' }}>
+                                🟢 Rutin
+                            </option>
+                            <option value="non_routine" {{ old('tingkat_prioritas') == 'non_routine' ? 'selected' : '' }}>
+                                🔵 Non Rutin
+                            </option>
+                        </select>
+                        @error('tingkat_prioritas')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
-            </div>
-            <div class="card-body p-4">
-                <!-- Info Alert -->
-                <div class="alert alert-info border-0 mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <div>
-                            <strong>Informasi:</strong>
-                            @if(Auth::user()->role === 'admin_gudang_umum')
-                                Anda akan membuat permintaan untuk kategori <strong>Umum</strong> (ATK, peralatan kantor, bahan habis pakai, dll.)
-                            @else
-                                Anda akan membuat permintaan untuk kategori <strong>Sparepart</strong> (suku cadang, komponen mesin, dll.)
-                            @endif
+
+                <div class="row">
+                    <!-- Tanggal Dibutuhkan -->
+                    <div class="col-md-4 mb-3">
+                        <label for="tanggal_dibutuhkan" class="form-label">
+                            <i class="fas fa-calendar-alt text-success me-1"></i>
+                            Tanggal Dibutuhkan <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" 
+                               class="form-control @error('tanggal_dibutuhkan') is-invalid @enderror" 
+                               id="tanggal_dibutuhkan" 
+                               name="tanggal_dibutuhkan" 
+                               value="{{ old('tanggal_dibutuhkan') }}"
+                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                               required>
+                        @error('tanggal_dibutuhkan')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Minimal H+1 dari hari ini
+                        </div>
+                    </div>
+
+                    <!-- Info Pemohon -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-user text-info me-1"></i>
+                            Pemohon
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               value="{{ auth()->user()->name }}" 
+                               readonly>
+                        <div class="form-text">
+                            <i class="fas fa-id-badge me-1"></i>
+                            {{ auth()->user()->getRoleLabel() }}
+                        </div>
+                    </div>
+
+                    <!-- Kategori Barang -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-tags text-secondary me-1"></i>
+                            Kategori Barang
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               value="{{ ucfirst(auth()->user()->getGudangKategori()) }}" 
+                               readonly>
+                        <div class="form-text">
+                            <i class="fas fa-warehouse me-1"></i>
+                            Otomatis berdasarkan role Anda
                         </div>
                     </div>
                 </div>
 
-                <form action="{{ route('permintaan.store') }}" method="POST">
-                    @csrf
-                    
-                    <div class="row">
-                        <!-- Nama Barang -->
-                        <div class="col-12 mb-4">
-                            <label for="nama_barang" class="form-label fw-semibold">
-                                <i class="fas fa-box text-primary me-2"></i>Nama Barang <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control form-control-lg @error('nama_barang') is-invalid @enderror" 
-                                   id="nama_barang" 
-                                   name="nama_barang" 
-                                   value="{{ old('nama_barang') }}"
-                                   placeholder="Masukkan nama barang yang dibutuhkan"
-                                   required>
-                            @error('nama_barang')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            
-                            <!-- Contoh barang -->
-                            <div class="form-text">
-                                <strong>Contoh:</strong>
-                                @if(Auth::user()->role === 'admin_gudang_umum')
-                                    Kertas A4, Tinta Printer, Lem Kertas, Stapler, dll.
-                                @else
-                                    Bearing Motor, Filter Udara, V-Belt, Sensor Suhu, dll.
-                                @endif
-                            </div>
+                <!-- Catatan Permintaan -->
+                <div class="mb-3">
+                    <label for="catatan_permintaan" class="form-label">
+                        <i class="fas fa-sticky-note text-warning me-1"></i>
+                        Catatan Permintaan
+                        <small class="text-muted">(Opsional)</small>
+                    </label>
+                    <textarea class="form-control @error('catatan_permintaan') is-invalid @enderror" 
+                              id="catatan_permintaan" 
+                              name="catatan_permintaan" 
+                              rows="4"
+                              placeholder="Tuliskan catatan tambahan, alasan khusus, atau detail lainnya yang perlu diketahui...">{{ old('catatan_permintaan') }}</textarea>
+                    @error('catatan_permintaan')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        Jelaskan alasan permintaan, spesifikasi khusus, atau informasi penting lainnya
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="alert alert-info border-left-info">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle fa-2x text-info"></i>
                         </div>
-                        
-                        <!-- Jumlah & Satuan -->
-                        <div class="col-md-6 mb-4">
-                            <label for="jumlah" class="form-label fw-semibold">
-                                <i class="fas fa-sort-numeric-up text-primary me-2"></i>Jumlah <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" 
-                                   class="form-control form-control-lg @error('jumlah') is-invalid @enderror" 
-                                   id="jumlah" 
-                                   name="jumlah" 
-                                   value="{{ old('jumlah') }}"
-                                   min="1"
-                                   placeholder="0"
-                                   required>
-                            @error('jumlah')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        
-                        <div class="col-md-6 mb-4">
-                            <label for="satuan" class="form-label fw-semibold">
-                                <i class="fas fa-balance-scale text-primary me-2"></i>Satuan <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select form-select-lg @error('satuan') is-invalid @enderror" 
-                                    id="satuan" 
-                                    name="satuan" 
-                                    required>
-                                <option value="">Pilih Satuan</option>
-                                <optgroup label="Umum">
-                                    <option value="pcs" {{ old('satuan') == 'pcs' ? 'selected' : '' }}>Pieces (pcs)</option>
-                                    <option value="set" {{ old('satuan') == 'set' ? 'selected' : '' }}>Set</option>
-                                    <option value="unit" {{ old('satuan') == 'unit' ? 'selected' : '' }}>Unit</option>
-                                    <option value="buah" {{ old('satuan') == 'buah' ? 'selected' : '' }}>Buah</option>
-                                </optgroup>
-                                <optgroup label="Volume">
-                                    <option value="liter" {{ old('satuan') == 'liter' ? 'selected' : '' }}>Liter</option>
-                                    <option value="ml" {{ old('satuan') == 'ml' ? 'selected' : '' }}>Mililiter</option>
-                                    <option value="galon" {{ old('satuan') == 'galon' ? 'selected' : '' }}>Galon</option>
-                                </optgroup>
-                                <optgroup label="Berat">
-                                    <option value="kg" {{ old('satuan') == 'kg' ? 'selected' : '' }}>Kilogram</option>
-                                    <option value="gram" {{ old('satuan') == 'gram' ? 'selected' : '' }}>Gram</option>
-                                    <option value="ton" {{ old('satuan') == 'ton' ? 'selected' : '' }}>Ton</option>
-                                </optgroup>
-                                <optgroup label="Panjang">
-                                    <option value="meter" {{ old('satuan') == 'meter' ? 'selected' : '' }}>Meter</option>
-                                    <option value="cm" {{ old('satuan') == 'cm' ? 'selected' : '' }}>Centimeter</option>
-                                    <option value="mm" {{ old('satuan') == 'mm' ? 'selected' : '' }}>Milimeter</option>
-                                </optgroup>
-                                <optgroup label="Kemasan">
-                                    <option value="kotak" {{ old('satuan') == 'kotak' ? 'selected' : '' }}>Kotak</option>
-                                    <option value="dus" {{ old('satuan') == 'dus' ? 'selected' : '' }}>Dus</option>
-                                    <option value="pack" {{ old('satuan') == 'pack' ? 'selected' : '' }}>Pack</option>
-                                    <option value="roll" {{ old('satuan') == 'roll' ? 'selected' : '' }}>Roll</option>
-                                </optgroup>
-                            </select>
-                            @error('satuan')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        
-                        <!-- Tanggal Butuh -->
-                        <div class="col-md-6 mb-4">
-                            <label for="tanggal_butuh" class="form-label fw-semibold">
-                                <i class="fas fa-calendar-alt text-primary me-2"></i>Tanggal Dibutuhkan
-                            </label>
-                            <input type="date" 
-                                   class="form-control form-control-lg @error('tanggal_butuh') is-invalid @enderror" 
-                                   id="tanggal_butuh" 
-                                   name="tanggal_butuh" 
-                                   value="{{ old('tanggal_butuh') }}"
-                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                            @error('tanggal_butuh')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">Optional - Jika ada deadline khusus</div>
-                        </div>
-                        
-                        <!-- Priority Level -->
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label fw-semibold">
-                                <i class="fas fa-exclamation-triangle text-primary me-2"></i>Tingkat Prioritas
-                            </label>
-                            <div class="d-flex gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="priority" id="priorityNormal" value="normal" checked>
-                                    <label class="form-check-label" for="priorityNormal">
-                                        <span class="badge bg-success">Normal</span>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="priority" id="priorityUrgent" value="urgent">
-                                    <label class="form-check-label" for="priorityUrgent">
-                                        <span class="badge bg-warning">Urgent</span>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="priority" id="priorityCritical" value="critical">
-                                    <label class="form-check-label" for="priorityCritical">
-                                        <span class="badge bg-danger">Critical</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Keterangan -->
-                        <div class="col-12 mb-4">
-                            <label for="keterangan" class="form-label fw-semibold">
-                                <i class="fas fa-comment text-primary me-2"></i>Keterangan
-                            </label>
-                            <textarea class="form-control @error('keterangan') is-invalid @enderror" 
-                                      id="keterangan" 
-                                      name="keterangan" 
-                                      rows="4"
-                                      placeholder="Jelaskan detail kebutuhan, spesifikasi, atau informasi tambahan lainnya...">{{ old('keterangan') }}</textarea>
-                            @error('keterangan')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">Berikan detail spesifikasi atau kegunaan barang</div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="alert-heading mb-2">Langkah Selanjutnya</h6>
+                            <p class="mb-2">Setelah membuat permintaan ini, Anda akan dapat:</p>
+                            <ul class="mb-0">
+                                <li>Menambahkan item-item barang yang dibutuhkan</li>
+                                <li>Mengatur urutan prioritas item</li>
+                                <li>Mengunggah gambar untuk item tertentu</li>
+                                <li>Mengirim permintaan untuk review</li>
+                            </ul>
                         </div>
                     </div>
-                    
-                    <!-- Summary Card -->
-                    <div class="card bg-light border-0 mb-4">
-                        <div class="card-body">
-                            <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-clipboard-check me-2"></i>Ringkasan Permintaan
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <small class="text-muted">Pemohon:</small>
-                                    <div class="fw-semibold">{{ Auth::user()->name }}</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <small class="text-muted">Kategori:</small>
-                                    <div class="fw-semibold">
-                                        <span class="badge {{ Auth::user()->role === 'admin_gudang_umum' ? 'bg-primary' : 'bg-warning' }}">
-                                            {{ Auth::user()->role === 'admin_gudang_umum' ? 'Umum' : 'Sparepart' }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                      <!-- Action Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-1"></i>Kembali
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-1"></i>Kirim Permintaan
-                            </button>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+
+            <!-- Card Footer with Actions -->
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <i class="fas fa-asterisk text-danger me-1" style="font-size: 0.7em;"></i>
+                        <small>Field yang bertanda * wajib diisi</small>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <a href="{{ route('permintaan.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Simpan & Lanjutkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
-@endsection
+
+@push('styles')
+    <style>
+        .border-left-info {
+            border-left: 4px solid #36b9cc !important;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+        }
+        
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .btn {
+            border-radius: 6px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        
+        .text-danger {
+            color: #e74a3b !important;
+        }
+    </style>
+@endpush
 
 @push('scripts')
-<script>
-    // Auto-suggest berdasarkan kategori
-    document.getElementById('nama_barang').addEventListener('input', function() {
-        // You can implement auto-suggest functionality here
-        const value = this.value.toLowerCase();
-        
-        // Example suggestions based on role
-        const suggestions = @if(Auth::user()->role === 'admin_gudang_umum')
-            ['Kertas A4', 'Tinta Printer', 'Lem Kertas', 'Stapler', 'Penggaris', 'Spidol', 'Correction Pen']
-        @else
-            ['Bearing Motor', 'Filter Udara', 'V-Belt', 'Sensor Suhu', 'Oil Seal', 'Gasket', 'Switch']
-        @endif;
-        
-        // Simple suggestion implementation (you can enhance this)
-    });
-</script>
+    <script>
+        $(document).ready(function() {
+            // Auto focus pada field pertama
+            $('#judul_permintaan').focus();
+            
+            // Validasi tanggal minimal H+1
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const minDate = tomorrow.toISOString().split('T')[0];
+            $('#tanggal_dibutuhkan').attr('min', minDate);
+            
+            // Preview prioritas dengan warna
+            $('#tingkat_prioritas').on('change', function() {
+                const select = $(this);
+                const value = select.val();
+                
+                // Reset classes
+                select.removeClass('border-danger border-warning border-success border-info');
+                
+                // Add appropriate border color
+                switch(value) {
+                    case 'urgent':
+                        select.addClass('border-danger');
+                        break;
+                    case 'penting':
+                        select.addClass('border-warning');
+                        break;
+                    case 'routine':
+                        select.addClass('border-success');
+                        break;
+                    case 'non_routine':
+                        select.addClass('border-info');
+                        break;
+                }
+            });
+            
+            // Form validation sebelum submit
+            $('#form-permintaan').on('submit', function(e) {
+                const judul = $('#judul_permintaan').val().trim();
+                const tanggal = $('#tanggal_dibutuhkan').val();
+                const prioritas = $('#tingkat_prioritas').val();
+                
+                if (!judul || !tanggal || !prioritas) {
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Data Tidak Lengkap',
+                        text: 'Mohon lengkapi semua field yang wajib diisi',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    return false;
+                }
+                
+                // Konfirmasi sebelum submit
+                e.preventDefault();
+                
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Konfirmasi',
+                    text: 'Apakah Anda yakin ingin membuat permintaan ini?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Buat',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#007bff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar',
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            willOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        // Submit form
+                        this.submit();
+                    }
+                });
+            });
+        });
+    </script>
 @endpush
