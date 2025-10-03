@@ -1,157 +1,111 @@
 <?php
 // File: app/Providers/AuthServiceProvider.php
-// Updated untuk menambahkan Gates baru
 
 namespace App\Providers;
 
 use App\Models\User;
-use App\Models\PermintaanBarang; // Model lama
-use App\Models\PermintaanHeader; // Model baru
-use App\Models\PermintaanItem;   // Model baru
+use App\Models\PermintaanHeader;
+use App\Models\PermintaanItem;
 use App\Models\PurchaseOrder;
+use App\Models\MasterBarang;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
-    protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
-    ];
+    protected $policies = [];
 
-    /**
-     * Register any authentication / authorization services.
-     */
     public function boot(): void
     {
         // ========================================
-        // BASIC ROLE GATES
+        // PERMINTAAN HEADER GATES
         // ========================================
-        
-        Gate::define('admin-gudang-only', function (User $user) {
-            return $user->isAdminGudang();
-        });
-        
-        Gate::define('purchasing-only', function (User $user) {
-            return $user->isPurchasing();
-        });
-        
-        Gate::define('manager-only', function (User $user) {
-            return $user->isManager();
-        });
-        
-        // ========================================
-        // OLD PERMINTAAN GATES (Backward Compatibility)
-        // ========================================
-        
-        Gate::define('review-permintaan', function (User $user) {
-            return $user->isPurchasing();
-        });
         
         Gate::define('create-permintaan', function (User $user) {
             return $user->isAdminGudang();
         });
         
-        Gate::define('view-permintaan', function (User $user, PermintaanBarang $permintaan) {
+        Gate::define('view-permintaan', function (User $user, PermintaanHeader $permintaan) {
             if ($user->isAdminGudang()) {
                 return $permintaan->user_id === $user->id;
             }
-            
             return $user->isPurchasing() || $user->isManager();
         });
         
-        Gate::define('edit-permintaan', function (User $user, PermintaanBarang $permintaan) {
+        Gate::define('edit-permintaan', function (User $user, PermintaanHeader $permintaan) {
             return $user->isAdminGudang() 
                 && $permintaan->user_id === $user->id 
-                && $permintaan->status === 'pending';
+                && in_array($permintaan->status, ['draft', 'pending']);
         });
         
-        // ========================================
-        // NEW PERMINTAAN HEADER GATES
-        // ========================================
-        
-        Gate::define('create-permintaan-header', function (User $user) {
-            return $user->isAdminGudang();
-        });
-        
-        Gate::define('view-permintaan-header', function (User $user, PermintaanHeader $permintaan) {
-            // Admin gudang hanya bisa lihat miliknya sendiri
-            if ($user->isAdminGudang()) {
-                return $permintaan->user_id === $user->id;
-            }
-            
-            // Purchasing dan Manager bisa lihat semua
-            return $user->isPurchasing() || $user->isManager();
-        });
-        
-        Gate::define('edit-permintaan-header', function (User $user, PermintaanHeader $permintaan) {
+        Gate::define('delete-permintaan', function (User $user, PermintaanHeader $permintaan) {
             return $user->isAdminGudang() 
                 && $permintaan->user_id === $user->id 
-                && $permintaan->canBeEdited();
+                && $permintaan->status === 'draft';
         });
         
-        Gate::define('delete-permintaan-header', function (User $user, PermintaanHeader $permintaan) {
+        Gate::define('submit-permintaan', function (User $user, PermintaanHeader $permintaan) {
             return $user->isAdminGudang() 
                 && $permintaan->user_id === $user->id 
-                && $permintaan->isDraft();
-        });
-        
-        Gate::define('submit-permintaan-header', function (User $user, PermintaanHeader $permintaan) {
-            return $user->isAdminGudang() 
-                && $permintaan->user_id === $user->id 
-                && $permintaan->isDraft()
-                && $permintaan->items()->count() > 0;
-        });
-        
-        Gate::define('review-permintaan-header', function (User $user, PermintaanHeader $permintaan) {
-            return $user->isPurchasing() && $permintaan->isPending();
+                && $permintaan->status === 'draft';
         });
         
         // ========================================
         // PERMINTAAN ITEM GATES
         // ========================================
         
-        Gate::define('create-permintaan-item', function (User $user, PermintaanHeader $permintaan) {
+        Gate::define('create-item', function (User $user, PermintaanHeader $permintaan) {
             return $user->isAdminGudang() 
                 && $permintaan->user_id === $user->id 
-                && $permintaan->canBeEdited();
+                && in_array($permintaan->status, ['draft', 'pending']);
         });
         
-        Gate::define('edit-permintaan-item', function (User $user, PermintaanItem $item) {
+        Gate::define('edit-item', function (User $user, PermintaanItem $item) {
             return $user->isAdminGudang() 
                 && $item->header->user_id === $user->id 
-                && $item->header->canBeEdited();
+                && in_array($item->header->status, ['draft', 'pending']);
         });
         
-        Gate::define('delete-permintaan-item', function (User $user, PermintaanItem $item) {
+        Gate::define('delete-item', function (User $user, PermintaanItem $item) {
             return $user->isAdminGudang() 
                 && $item->header->user_id === $user->id 
-                && $item->header->canBeEdited();
+                && in_array($item->header->status, ['draft', 'pending']);
         });
         
-        Gate::define('review-permintaan-item', function (User $user, PermintaanItem $item) {
-            return $user->isPurchasing() && $item->isPending();
+        Gate::define('upload-image', function (User $user, PermintaanItem $item) {
+            return $user->isAdminGudang() 
+                && $item->header->user_id === $user->id 
+                && in_array($item->header->status, ['draft', 'pending']);
+        });
+        
+        // ========================================
+        // REVIEW GATES (PURCHASING)
+        // ========================================
+        
+        Gate::define('review-permintaan', function (User $user) {
+            return $user->isPurchasing();
+        });
+        
+        Gate::define('review-item', function (User $user, PermintaanItem $item) {
+            return $user->isPurchasing() && $item->status === 'pending';
         });
         
         // ========================================
         // PURCHASE ORDER GATES
         // ========================================
         
+        Gate::define('create-purchase-order', function (User $user) {
+            return $user->isPurchasing();
+        });
+        
         Gate::define('send-purchase-order', function (User $user) {
             return $user->isPurchasing();
         });
         
         Gate::define('view-purchase-order', function (User $user, PurchaseOrder $purchaseOrder) {
-            // Purchasing hanya bisa lihat miliknya
             if ($user->isPurchasing()) {
                 return $purchaseOrder->purchasing_user_id === $user->id;
             }
-            
-            // Manager bisa lihat semua
             return $user->isManager();
         });
         
@@ -168,57 +122,83 @@ class AuthServiceProvider extends ServiceProvider
         });
         
         // ========================================
-        // COMBINATION GATES (untuk complex permissions)
+        // MASTER BARANG GATES (BARU)
         // ========================================
         
-        // Gate untuk melihat semua permintaan (dashboard manager/purchasing)
+        // SEMUA USER BISA VIEW
+        Gate::define('view-master-barang', function (User $user) {
+            return true; // Semua authenticated user
+        });
+        
+        // Hanya Admin Gudang yang bisa create
+        Gate::define('create-master-barang', function (User $user) {
+            return $user->isAdminGudang();
+        });
+        
+        // Edit barang - sesuai kategori
+        Gate::define('edit-master-barang', function (User $user, MasterBarang $masterBarang) {
+            if (!$user->isAdminGudang()) {
+                return false;
+            }
+            
+            $kategoriUser = $user->getGudangKategori();
+            return $kategoriUser === $masterBarang->kategori;
+        });
+        
+        // Update stok - sesuai kategori
+        Gate::define('update-stok', function (User $user, MasterBarang $masterBarang) {
+            if (!$user->isAdminGudang()) {
+                return false;
+            }
+            
+            $kategoriUser = $user->getGudangKategori();
+            return $kategoriUser === $masterBarang->kategori;
+        });
+        
+        // Delete barang - sesuai kategori
+        Gate::define('delete-master-barang', function (User $user, MasterBarang $masterBarang) {
+            if (!$user->isAdminGudang()) {
+                return false;
+            }
+            
+            $kategoriUser = $user->getGudangKategori();
+            return $kategoriUser === $masterBarang->kategori;
+        });
+        
+        // ========================================
+        // ROLE-BASED GATES (UNTUK MIDDLEWARE)
+        // ========================================
+        
+        Gate::define('admin-gudang-only', function (User $user) {
+            return $user->isAdminGudang();
+        });
+        
+        Gate::define('purchasing-only', function (User $user) {
+            return $user->isPurchasing();
+        });
+        
+        Gate::define('manager-only', function (User $user) {
+            return $user->isManager();
+        });
+        
+        // ========================================
+        // VIEW ACCESS GATES
+        // ========================================
+        
         Gate::define('view-all-permintaan', function (User $user) {
             return $user->isPurchasing() || $user->isManager();
         });
         
-        // Gate untuk export/report
-        Gate::define('export-permintaan', function (User $user) {
+        Gate::define('view-all-purchase-orders', function (User $user) {
             return $user->isManager();
         });
         
-        // Gate untuk approve/reject batch
-        Gate::define('batch-review-permintaan', function (User $user) {
-            return $user->isPurchasing();
-        });
-        
-        // Gate untuk setting prioritas urgent
-        Gate::define('set-urgent-priority', function (User $user, PermintaanHeader $permintaan) {
-            // Manager bisa set urgent kapan saja
-            if ($user->isManager()) {
-                return true;
-            }
-            
-            // Admin gudang hanya bisa set urgent untuk miliknya yang masih draft/pending
-            return $user->isAdminGudang() 
-                && $permintaan->user_id === $user->id 
-                && in_array($permintaan->status, ['draft', 'pending']);
-        });
-        
         // ========================================
-        // FILE UPLOAD GATES
+        // EXPORT GATES
         // ========================================
         
-        Gate::define('upload-item-image', function (User $user, PermintaanItem $item) {
-            return $user->isAdminGudang() 
-                && $item->header->user_id === $user->id 
-                && $item->header->canBeEdited();
-        });
-        
-        // ========================================
-        // NOTIFICATION GATES
-        // ========================================
-        
-        Gate::define('receive-permintaan-notifications', function (User $user) {
-            return $user->isPurchasing() || $user->isManager();
-        });
-        
-        Gate::define('receive-po-notifications', function (User $user) {
-            return $user->isManager();
+        Gate::define('export-data', function (User $user) {
+            return true; // Semua user bisa export
         });
     }
 }

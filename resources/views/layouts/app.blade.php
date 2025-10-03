@@ -20,7 +20,9 @@
     
     <!-- Toastify untuk notifikasi ringan -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- Sebelum </head> -->
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -103,72 +105,81 @@
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <!-- Left Navigation -->
-                    <ul class="navbar-nav me-auto">
-                        @auth
-                            <li class="nav-item">
-                                <a class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            
-                            @if(Auth::user()->isAdminGudang())
-                                <!-- Admin Gudang Menu -->
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('permintaan.index') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
-                                        <i class="fas fa-list me-1"></i> My Requests
-                                        @php $myDrafts = Auth::user()->permintaanHeaders()->where('status', 'draft')->count(); @endphp
-                                        @if($myDrafts > 0)
-                                            <span class="badge bg-warning text-dark ms-1 notification-badge">{{ $myDrafts }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('permintaan.create') ? 'active' : '' }}" href="{{ route('permintaan.create') }}">
-                                        <i class="fas fa-plus-circle me-1"></i> New Request
-                                    </a>
-                                </li>
-                                
-                            @elseif(Auth::user()->isPurchasing())
-                                <!-- Purchasing Menu -->
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('permintaan.*') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
-                                        <i class="fas fa-clipboard-check me-1"></i> Review Queue
-                                        @php $pending = \App\Models\PermintaanHeader::where('status', 'pending')->count(); @endphp
-                                        @if($pending > 0)
-                                            <span class="badge bg-danger ms-1 notification-badge">{{ $pending }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">
-                                        <i class="fas fa-file-invoice-dollar me-1"></i> Purchase Orders
-                                        @php $myDraftPO = Auth::user()->purchaseOrders()->where('status', 'draft')->count(); @endphp
-                                        @if($myDraftPO > 0)
-                                            <span class="badge bg-info ms-1">{{ $myDraftPO }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                
-                            @else
-                                <!-- Manager Menu -->
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('permintaan.*') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
-                                        <i class="fas fa-eye me-1"></i> All Requests
-                                        @php $urgentItems = \App\Models\PermintaanHeader::where('tingkat_prioritas', 'urgent')->whereIn('status', ['pending', 'review'])->count(); @endphp
-                                        @if($urgentItems > 0)
-                                            <span class="badge bg-danger ms-1 notification-badge">{{ $urgentItems }} Urgent</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ Request::routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">
-                                        <i class="fas fa-chart-line me-1"></i> PO Reports
-                                    </a>
-                                </li>
-                            @endif
-                        @endauth
-                    </ul>
+                   {{-- File: resources/views/layouts/app.blade.php - UPDATE BAGIAN NAVBAR SAJA --}}
 
+<!-- Left Navigation -->
+<ul class="navbar-nav me-auto">
+    @auth
+        <li class="nav-item">
+            <a class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+            </a>
+        </li>
+        
+        {{-- TAMBAHKAN LINK MASTER BARANG DI SINI - UNTUK SEMUA ROLE --}}
+        <li class="nav-item">
+            <a class="nav-link {{ Request::routeIs('master-barang.*') ? 'active' : '' }}" href="{{ route('master-barang.index') }}">
+                <i class="fas fa-boxes me-1"></i> Master Barang
+            </a>
+        </li>
+        
+        @if(Auth::user()->isAdminGudang())
+            <!-- Admin Gudang Menu -->
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('permintaan.index') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
+                    <i class="fas fa-list me-1"></i> My Requests
+                    @php $myDrafts = Auth::user()->permintaanHeaders()->where('status', 'draft')->count(); @endphp
+                    @if($myDrafts > 0)
+                        <span class="badge bg-warning text-dark ms-1 notification-badge">{{ $myDrafts }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('permintaan.create') ? 'active' : '' }}" href="{{ route('permintaan.create') }}">
+                    <i class="fas fa-plus-circle me-1"></i> New Request
+                </a>
+            </li>
+            
+        @elseif(Auth::user()->isPurchasing())
+            <!-- Purchasing Menu -->
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('permintaan.*') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
+                    <i class="fas fa-clipboard-check me-1"></i> Review Queue
+                    @php $pending = \App\Models\PermintaanHeader::where('status', 'pending')->count(); @endphp
+                    @if($pending > 0)
+                        <span class="badge bg-danger ms-1 notification-badge">{{ $pending }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Purchase Orders
+                    @php $myDraftPO = Auth::user()->purchaseOrders()->where('status', 'draft')->count(); @endphp
+                    @if($myDraftPO > 0)
+                        <span class="badge bg-info ms-1">{{ $myDraftPO }}</span>
+                    @endif
+                </a>
+            </li>
+            
+        @else
+            <!-- Manager Menu -->
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('permintaan.*') ? 'active' : '' }}" href="{{ route('permintaan.index') }}">
+                    <i class="fas fa-eye me-1"></i> All Requests
+                    @php $urgentItems = \App\Models\PermintaanHeader::where('tingkat_prioritas', 'urgent')->whereIn('status', ['pending', 'review'])->count(); @endphp
+                    @if($urgentItems > 0)
+                        <span class="badge bg-danger ms-1 notification-badge">{{ $urgentItems }} Urgent</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">
+                    <i class="fas fa-chart-line me-1"></i> PO Reports
+                </a>
+            </li>
+        @endif
+    @endauth
+</ul>
                     <!-- Right Navigation -->
                     <ul class="navbar-nav">
                         @auth

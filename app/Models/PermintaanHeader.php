@@ -10,6 +10,8 @@ class PermintaanHeader extends Model
 {
     use HasFactory;
 
+    protected $table = 'permintaan_headers';
+
     protected $fillable = [
         'user_id',
         'nomor_permintaan',
@@ -24,7 +26,7 @@ class PermintaanHeader extends Model
         'rejected_items',
         'submitted_at',
         'reviewed_at',
-        'completed_at'
+        'completed_at',
     ];
 
     protected $casts = [
@@ -33,9 +35,6 @@ class PermintaanHeader extends Model
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'total_items' => 'integer',
-        'approved_items' => 'integer',
-        'rejected_items' => 'integer'
     ];
 
     // Relationships
@@ -46,20 +45,15 @@ class PermintaanHeader extends Model
 
     public function items()
     {
-        return $this->hasMany(PermintaanItem::class);
+        return $this->hasMany(PermintaanItem::class, 'permintaan_header_id');
     }
 
     public function activities()
     {
-        return $this->hasMany(PermintaanActivity::class);
+        return $this->hasMany(PermintaanActivity::class, 'permintaan_header_id');
     }
 
-    public function purchaseOrders()
-    {
-        return $this->hasMany(PurchaseOrder::class, 'permintaan_header_id');
-    }
-
-    // Helper Methods
+    // Helper methods untuk status
     public function isDraft()
     {
         return $this->status === 'draft';
@@ -70,65 +64,82 @@ class PermintaanHeader extends Model
         return $this->status === 'pending';
     }
 
+    public function isReview()
+    {
+        return $this->status === 'review';
+    }
+
     public function isApproved()
     {
         return $this->status === 'approved';
     }
 
+    public function isRejected()
+    {
+        return $this->status === 'rejected';
+    }
+
+    // Update counters
+    public function updateCounters()
+    {
+        $this->total_items = $this->items()->count();
+        $this->approved_items = $this->items()->where('status', 'approved')->count();
+        $this->rejected_items = $this->items()->where('status', 'rejected')->count();
+        $this->save();
+        
+        // Auto update status berdasarkan item status
+        if ($this->total_items > 0) {
+            if ($this->rejected_items === $this->total_items) {
+                $this->status = 'rejected';
+            } elseif ($this->approved_items === $this->total_items) {
+                $this->status = 'approved';
+            } elseif ($this->approved_items > 0 || $this->rejected_items > 0) {
+                $this->status = 'partial';
+            }
+            $this->save();
+        }
+    }
+
+    // Get formatted tanggal for display (dd/mm/yyyy)
+    public function getTanggalPermintaanFormattedAttribute()
+    {
+        return $this->tanggal_permintaan ? $this->tanggal_permintaan->format('d/m/Y') : '-';
+    }
+
+    public function getTanggalDibutuhkanFormattedAttribute()
+    {
+        return $this->tanggal_dibutuhkan ? $this->tanggal_dibutuhkan->format('d/m/Y') : '-';
+    }
+    
+    // Get formatted tanggal for input field (dd/mm/yyyy) - untuk edit form
+    public function getTanggalPermintaanInputAttribute()
+    {
+        return $this->tanggal_permintaan ? $this->tanggal_permintaan->format('d/m/Y') : '';
+    }
+
+    public function getTanggalDibutuhkanInputAttribute()
+    {
+        return $this->tanggal_dibutuhkan ? $this->tanggal_dibutuhkan->format('d/m/Y') : '';
+    }
+    
+    // Method untuk cek apakah bisa diedit (digunakan oleh PermintaanItemController)
     public function canBeEdited()
     {
         return in_array($this->status, ['draft', 'pending']);
     }
 
-    public function getProgressPercentage()
-    {
-        if ($this->total_items == 0) return 0;
-        return round(($this->approved_items / $this->total_items) * 100);
-    }
-
-    public function getPriorityLabel()
-    {
-        return [
-            'urgent' => 'Sangat Urgent',
-            'penting' => 'Penting',
-            'routine' => 'Rutin',
-            'non_routine' => 'Non Rutin'
-        ][$this->tingkat_prioritas] ?? $this->tingkat_prioritas;
-    }
-
-    public function getStatusLabel()
-    {
-        return [
-            'draft' => 'Draft',
-            'pending' => 'Menunggu Review',
-            'review' => 'Sedang Review',
-            'partial' => 'Sebagian Disetujui',
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
-            'po_created' => 'PO Dibuat'
-        ][$this->status] ?? $this->status;
-    }
-
-    // Auto generate nomor permintaan
+    // Boot method untuk auto generate nomor
     protected static function boot()
     {
         parent::boot();
         
-        static::creating(function ($header) {
-            if (empty($header->nomor_permintaan)) {
-                $header->nomor_permintaan = 'REQ-' . date('Ymd') . '-' . 
-                    str_pad((static::whereDate('created_at', today())->count() + 1), 3, '0', STR_PAD_LEFT);
+        static::creating(function ($permintaan) {
+            if (empty($permintaan->nomor_permintaan)) {
+                $permintaan->nomor_permintaan = 'REQ-' . date('Ymd') . '-' . str_pad(
+                    static::whereDate('created_at', today())->count() + 1, 
+                    4, '0', STR_PAD_LEFT
+                );
             }
         });
-    }
-
-    // Scope untuk filter berdasarkan role
-    public function scopeForUser($query, $user)
-    {
-        if ($user->isAdminGudang()) {
-            return $query->where('user_id', $user->id);
-        }
-        
-        return $query; // Manager dan Purchasing bisa lihat semua
     }
 }

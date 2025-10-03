@@ -1,5 +1,5 @@
 {{-- File: resources/views/permintaan/create.blade.php --}}
-{{-- Form Create Permintaan - COMPLETE VERSION --}}
+{{-- Form Create Permintaan - UPDATED VERSION WITH DD/MM/YYYY FORMAT --}}
 @extends('layouts.app')
 
 @section('title', 'Buat Permintaan Baru')
@@ -69,32 +69,35 @@
                         </div>
 
                         <div class="row">
-                            {{-- Tanggal Permintaan --}}
+                            {{-- Tanggal Permintaan - INPUT MANUAL --}}
                             <div class="col-md-4 mb-4">
                                 <label class="form-label fw-bold">
                                     📋 Tanggal Permintaan <span class="text-danger">*</span>
                                 </label>
-                                <input type="date" 
+                                <input type="text" 
                                        name="tanggal_permintaan" 
-                                       class="form-control @error('tanggal_permintaan') is-invalid @enderror" 
-                                       value="{{ old('tanggal_permintaan', date('Y-m-d')) }}"
-                                       readonly>
+                                       id="tanggal_permintaan"
+                                       class="form-control datepicker @error('tanggal_permintaan') is-invalid @enderror" 
+                                       value="{{ old('tanggal_permintaan', date('d/m/Y')) }}"
+                                       placeholder="dd/mm/yyyy"
+                                       required>
                                 @error('tanggal_permintaan')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="form-text text-muted">Hari ini (otomatis)</small>
+                                <small class="form-text text-muted">Format: dd/mm/yyyy</small>
                             </div>
 
-                            {{-- Tanggal Dibutuhkan --}}
+                            {{-- Tanggal Dibutuhkan - INPUT MANUAL --}}
                             <div class="col-md-4 mb-4">
                                 <label class="form-label fw-bold">
                                     📅 Kapan Dibutuhkan? <span class="text-danger">*</span>
                                 </label>
-                                <input type="date" 
+                                <input type="text" 
                                        name="tanggal_dibutuhkan" 
-                                       class="form-control @error('tanggal_dibutuhkan') is-invalid @enderror" 
+                                       id="tanggal_dibutuhkan"
+                                       class="form-control datepicker @error('tanggal_dibutuhkan') is-invalid @enderror" 
                                        value="{{ old('tanggal_dibutuhkan') }}"
-                                       min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                       placeholder="dd/mm/yyyy"
                                        required>
                                 @error('tanggal_dibutuhkan')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -152,7 +155,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <small class="text-muted d-block">Kategori:</small>
-                                        <strong>{{ ucfirst(auth()->user()->getGudangKategori()) }}</strong>
+                                        <strong>{{ auth()->user()->role === 'admin_gudang_sparepart' ? 'Sparepart' : 'Umum' }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -181,6 +184,7 @@
                         <li>Satu permintaan bisa berisi banyak barang</li>
                         <li>Barang akan ditambahkan di halaman berikutnya</li>
                         <li>Permintaan masih bisa diedit sebelum disubmit</li>
+                        <li>Format tanggal: dd/mm/yyyy (contoh: 31/12/2025)</li>
                     </ul>
                 </div>
             </div>
@@ -191,16 +195,31 @@
 </div>
 
 @push('scripts')
+<!-- jQuery (jika belum ada) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap Datepicker -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
 <script>
 $(document).ready(function() {
     // Auto focus
     $('input[name="judul_permintaan"]').focus();
     
-    // Set minimum date untuk tanggal dibutuhkan
+    // Initialize Datepicker dengan format dd/mm/yyyy
+    $('.datepicker').datepicker({
+        format: 'dd/mm/yyyy',
+        autoclose: true,
+        todayHighlight: true,
+        orientation: 'bottom auto',
+        language: 'id'
+    });
+    
+    // Set minimum date untuk tanggal dibutuhkan (besok)
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = tomorrow.toISOString().split('T')[0];
-    $('input[name="tanggal_dibutuhkan"]').attr('min', minDate);
+    $('#tanggal_dibutuhkan').datepicker('setStartDate', tomorrow);
     
     // Visual feedback untuk prioritas
     $('select[name="tingkat_prioritas"]').on('change', function() {
@@ -218,13 +237,14 @@ $(document).ready(function() {
         }
     });
     
-    // Konfirmasi submit
+    // Konfirmasi submit dengan validasi tanggal
     $('#formPermintaan').on('submit', function(e) {
         const judul = $('input[name="judul_permintaan"]').val().trim();
-        const tanggalDibutuhkan = $('input[name="tanggal_dibutuhkan"]').val();
+        const tanggalPermintaan = $('#tanggal_permintaan').val();
+        const tanggalDibutuhkan = $('#tanggal_dibutuhkan').val();
         const prioritas = $('select[name="tingkat_prioritas"]').val();
         
-        if (!judul || !tanggalDibutuhkan || !prioritas) {
+        if (!judul || !tanggalPermintaan || !tanggalDibutuhkan || !prioritas) {
             e.preventDefault();
             
             Swal.fire({
@@ -236,18 +256,55 @@ $(document).ready(function() {
             return false;
         }
         
-        // Validasi tanggal
+        // Validasi format tanggal dd/mm/yyyy
+        const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        
+        if (!dateRegex.test(tanggalPermintaan) || !dateRegex.test(tanggalDibutuhkan)) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Format Tanggal Salah',
+                text: 'Format tanggal harus dd/mm/yyyy (contoh: 31/12/2025)',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+        
+        // Parse tanggal dari format dd/mm/yyyy
+        const parseDateDMY = (dateStr) => {
+            const parts = dateStr.split('/');
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        };
+        
+        const datePermintaan = parseDateDMY(tanggalPermintaan);
+        const dateDibutuhkan = parseDateDMY(tanggalDibutuhkan);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const selectedDate = new Date(tanggalDibutuhkan);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
         
-        if (selectedDate <= today) {
+        // Validasi tanggal dibutuhkan harus minimal besok
+        if (dateDibutuhkan < tomorrow) {
             e.preventDefault();
             
             Swal.fire({
                 icon: 'error',
                 title: 'Tanggal Tidak Valid',
                 text: 'Tanggal dibutuhkan harus minimal besok (H+1)',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+        
+        // Validasi tanggal permintaan tidak lebih dari tanggal dibutuhkan
+        if (datePermintaan > dateDibutuhkan) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Tanggal Tidak Valid',
+                text: 'Tanggal permintaan tidak boleh lebih dari tanggal dibutuhkan',
                 confirmButtonText: 'OK'
             });
             return false;
@@ -278,11 +335,6 @@ $(document).ready(function() {
     .form-select:focus {
         border-color: #4e73df;
         box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-    }
-    
-    .form-control[readonly] {
-        background-color: #e9ecef;
-        cursor: not-allowed;
     }
     
     .form-select.border-danger {
@@ -319,6 +371,21 @@ $(document).ready(function() {
         background-color: #d1ecf1;
         border-color: #bee5eb;
         color: #0c5460;
+    }
+    
+    /* Datepicker customization */
+    .datepicker {
+        border-radius: 8px;
+    }
+    
+    .datepicker table tr td.active,
+    .datepicker table tr td.active:hover {
+        background-color: #4e73df !important;
+        background-image: none;
+    }
+    
+    .datepicker table tr td.today {
+        background-color: #f0f0f0 !important;
     }
 </style>
 @endpush

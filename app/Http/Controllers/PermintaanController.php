@@ -1,95 +1,321 @@
 <?php
 // File: app/Http/Controllers/PermintaanController.php
-// Controller baru untuk menangani struktur permintaan header-item
+// Controller untuk CRUD Permintaan Header dengan format tanggal dd/mm/yyyy
 
 namespace App\Http\Controllers;
 
 use App\Models\PermintaanHeader;
-use App\Models\PermintaanItem;
 use App\Models\PermintaanActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class PermintaanController extends Controller
 {
-    // Daftar semua permintaan
+    /**
+     * Convert date from dd/mm/yyyy to yyyy-mm-dd untuk database
+     */
+    private function convertDateToDatabase($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+        
+        // Cek apakah format dd/mm/yyyy
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $date, $matches)) {
+            // dd/mm/yyyy -> yyyy-mm-dd
+            return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+        
+        // Jika sudah format yyyy-mm-dd, return as is
+        return $date;
+    }
+    
+    /**
+     * Tampilkan daftar permintaan
+     */
     public function index()
     {
         $user = Auth::user();
         
-        $query = PermintaanHeader::with(['user', 'items'])
-            ->forUser($user)
-            ->latest();
-
-        // Filter berdasarkan parameter
+        // Filter berdasarkan request
+        $query = PermintaanHeader::query();
+        
+        if ($user->isAdminGudang()) {
+            // Admin gudang hanya lihat miliknya
+            $query->where('user_id', $user->id);
+        } elseif ($user->isPurchasing()) {
+            // Purchasing lihat yang perlu direview
+            $query->whereIn('status', ['pending', 'review']);
+        }
+        // Manager lihat semua (tidak ada filter tambahan)
+        
+        // Apply filters dari request
         if (request('status')) {
             $query->where('status', request('status'));
         }
-
+        
         if (request('priority')) {
             $query->where('tingkat_prioritas', request('priority'));
         }
-
-        $permintaans = $query->paginate(10);
+        
+        $permintaans = $query->with(['user', 'items'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view('permintaan.index', compact('permintaans'));
     }
 
-    // Form create permintaan baru
+    /**
+     * Form buat permintaan baru (hanya admin gudang)
+     */
     public function create()
     {
         $user = Auth::user();
         
         if (!$user->isAdminGudang()) {
-            abort(403, 'Hanya Admin Gudang yang bisa membuat permintaan');
+            abort(403, 'Hanya Admin Gudang yang dapat membuat permintaan');
         }
 
         return view('permintaan.create');
     }
 
-    // Simpan permintaan baru (header saja dulu)
+    /**
+     * Simpan permintaan baru
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
         
         if (!$user->isAdminGudang()) {
-            abort(403, 'Unauthorized');
+            abort(403, 'Hanya Admin Gudang yang dapat membuat permintaan');
         }
 
         $validated = $request->validate([
             'judul_permintaan' => 'required|string|max:255',
-            'tanggal_dibutuhkan' => 'required|date|after:today',
+            'tanggal_permintaan' => 'required|string', // Format dd/mm/yyyy
+            'tanggal_dibutuhkan' => 'required|string', // Format dd/mm/yyyy
             'tingkat_prioritas' => 'required|in:urgent,penting,routine,non_routine',
             'catatan_permintaan' => 'nullable|string'
+        ], [
+            'judul_permintaan.required' => 'Judul permintaan harus diisi',
+            'tanggal_permintaan.required' => 'Tanggal permintaan harus diisi',
+            'tanggal_dibutuhkan.required' => 'Tanggal dibutuhkan harus diisi',
+            'tingkat_prioritas.required' => 'Tingkat prioritas harus dipilih',
         ]);
+
+        // Convert tanggal dari dd/mm/yyyy ke yyyy-mm-dd
+        $tanggalPermintaan = $this->convertDateToDatabase($validated['tanggal_permintaan']);
+        $tanggalDibutuhkan = $this->convertDateToDatabase($validated['tanggal_dibutuhkan']);
+        
+        // Validasi tanggal dibutuhkan harus lebih dari hari ini
+        if (Carbon::parse($tanggalDibutuhkan)->lte(Carbon::today())) {
+            return back()->withErrors([
+                'tanggal_dibutuhkan' => 'Tanggal dibutuhkan harus minimal besok (H+1)'
+            ])->withInput();
+        }
+        
+        // Validasi tanggal permintaan tidak boleh lebih dari tanggal dibutuhkan
+        if (Carbon::parse($tanggalPermintaan)->gt(Carbon::parse($tanggalDibutuhkan))) {
+            return back()->withErrors([
+                'tanggal_permintaan' => 'Tanggal permintaan tidak boleh lebih dari tanggal dibutuhkan'
+            ])->withInput();
+        }
 
         DB::beginTransaction();
         
         try {
-            $header = PermintaanHeader::create([
+            // Generate nomor permintaan
+            $nomorPermintaan = 'REQ-' . date('Ymd') . '-' . str_pad(
+                PermintaanHeader::whereDate('created_at', today())->count() + 1, 
+                4, '0', STR_PAD_LEFT
+            );
+
+            $permintaan = PermintaanHeader::create([
                 'user_id' => $user->id,
+                'nomor_permintaan' => $nomorPermintaan,
                 'judul_permintaan' => $validated['judul_permintaan'],
-                'tanggal_permintaan' => now()->format('Y-m-d'),
-                'tanggal_dibutuhkan' => $validated['tanggal_dibutuhkan'],
+                'tanggal_permintaan' => $tanggalPermintaan,
+                'tanggal_dibutuhkan' => $tanggalDibutuhkan,
                 'tingkat_prioritas' => $validated['tingkat_prioritas'],
                 'catatan_permintaan' => $validated['catatan_permintaan'],
-                'status' => 'draft'
+                'status' => 'draft',
+                'total_items' => 0,
+                'approved_items' => 0,
+                'rejected_items' => 0
             ]);
 
             // Log activity
             PermintaanActivity::log(
-                $header->id, 
-                $user->id, 
-                'created', 
-                "Permintaan '{$header->judul_permintaan}' dibuat"
+                $permintaan->id,
+                $user->id,
+                'created',
+                "Permintaan '{$permintaan->judul_permintaan}' dibuat",
+                ['nomor_permintaan' => $permintaan->nomor_permintaan]
             );
 
             DB::commit();
 
-            return redirect()->route('permintaan.show', $header)
-                ->with('success', 'Permintaan berhasil dibuat! Silahkan tambahkan item barang.');
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('success', 'Permintaan berhasil dibuat! Silakan tambahkan item barang.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Detail permintaan
+     */
+    public function show(PermintaanHeader $permintaan)
+{
+    $user = Auth::user();
+    
+    // Check authorization
+    if ($user->isAdminGudang() && $permintaan->user_id !== $user->id) {
+        abort(403, 'Unauthorized');
+    }
+
+    $permintaan->load([
+        'user', 
+        'items' => function($query) {
+            $query->orderBy('urutan');
+        }, 
+        'activities' => function($query) {
+            $query->with('user')->latest();
+        }
+    ]);
+
+    // UBAH INI: Gunakan view manage-items yang sudah ada
+    return view('permintaan.manage-items', compact('permintaan'));
+}
+
+    /**
+     * Form edit (hanya admin gudang untuk permintaan draft)
+     */
+    public function edit(PermintaanHeader $permintaan)
+    {
+        $user = Auth::user();
+        
+        if (!$user->isAdminGudang() || $permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk edit permintaan ini');
+        }
+        
+        if (!$permintaan->canBeEdited()) {
+            return redirect()->route('permintaan.show', $permintaan)
+                ->withErrors(['error' => 'Hanya permintaan dengan status draft/pending yang bisa diedit']);
+        }
+
+        return view('permintaan.edit', compact('permintaan'));
+    }
+
+    /**
+     * Update permintaan
+     */
+    public function update(Request $request, PermintaanHeader $permintaan)
+    {
+        $user = Auth::user();
+        
+        if (!$user->isAdminGudang() || $permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk update permintaan ini');
+        }
+        
+        if (!$permintaan->canBeEdited()) {
+            return back()->withErrors(['error' => 'Permintaan ini tidak dapat diedit']);
+        }
+
+        $validated = $request->validate([
+            'judul_permintaan' => 'required|string|max:255',
+            'tanggal_permintaan' => 'required|string',
+            'tanggal_dibutuhkan' => 'required|string',
+            'tingkat_prioritas' => 'required|in:urgent,penting,routine,non_routine',
+            'catatan_permintaan' => 'nullable|string'
+        ], [
+            'judul_permintaan.required' => 'Judul permintaan harus diisi',
+            'tanggal_permintaan.required' => 'Tanggal permintaan harus diisi',
+            'tanggal_dibutuhkan.required' => 'Tanggal dibutuhkan harus diisi',
+            'tingkat_prioritas.required' => 'Tingkat prioritas harus dipilih',
+        ]);
+
+        // Convert tanggal
+        $tanggalPermintaan = $this->convertDateToDatabase($validated['tanggal_permintaan']);
+        $tanggalDibutuhkan = $this->convertDateToDatabase($validated['tanggal_dibutuhkan']);
+        
+        // Validasi tanggal
+        if (Carbon::parse($tanggalDibutuhkan)->lte(Carbon::today())) {
+            return back()->withErrors([
+                'tanggal_dibutuhkan' => 'Tanggal dibutuhkan harus minimal besok (H+1)'
+            ])->withInput();
+        }
+        
+        if (Carbon::parse($tanggalPermintaan)->gt(Carbon::parse($tanggalDibutuhkan))) {
+            return back()->withErrors([
+                'tanggal_permintaan' => 'Tanggal permintaan tidak boleh lebih dari tanggal dibutuhkan'
+            ])->withInput();
+        }
+
+        DB::beginTransaction();
+        
+        try {
+            $permintaan->update([
+                'judul_permintaan' => $validated['judul_permintaan'],
+                'tanggal_permintaan' => $tanggalPermintaan,
+                'tanggal_dibutuhkan' => $tanggalDibutuhkan,
+                'tingkat_prioritas' => $validated['tingkat_prioritas'],
+                'catatan_permintaan' => $validated['catatan_permintaan'],
+            ]);
+
+            // Log activity
+            PermintaanActivity::log(
+                $permintaan->id,
+                $user->id,
+                'status_changed',
+                "Permintaan '{$permintaan->judul_permintaan}' diupdate"
+            );
+
+            DB::commit();
+
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('success', 'Permintaan berhasil diupdate!');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Hapus permintaan (hanya admin gudang untuk permintaan draft)
+     */
+    public function destroy(PermintaanHeader $permintaan)
+    {
+        $user = Auth::user();
+        
+        if (!$user->isAdminGudang() || $permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk hapus permintaan ini');
+        }
+        
+        if ($permintaan->status !== 'draft') {
+            return back()->withErrors(['error' => 'Hanya permintaan draft yang bisa dihapus']);
+        }
+
+        DB::beginTransaction();
+        
+        try {
+            $judulPermintaan = $permintaan->judul_permintaan;
+            
+            // Hapus semua items (cascade akan handle ini jika ada foreign key)
+            $permintaan->items()->delete();
+            
+            // Hapus permintaan
+            $permintaan->delete();
+
+            DB::commit();
+
+            return redirect()->route('permintaan.index')
+                ->with('success', "Permintaan '{$judulPermintaan}' berhasil dihapus");
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -97,93 +323,26 @@ class PermintaanController extends Controller
         }
     }
 
-    // Detail permintaan dengan items
-    public function show(PermintaanHeader $permintaan)
-    {
-        $user = Auth::user();
-        
-        // Check authorization
-        if ($user->isAdminGudang() && $permintaan->user_id !== $user->id) {
-            abort(403, 'Unauthorized');
-        }
-
-        $permintaan->load([
-            'user', 
-            'items' => function($query) {
-                $query->orderBy('urutan');
-            }, 
-            'activities' => function($query) {
-                $query->with('user')->latest();
-            }
-        ]);
-
-        return view('permintaan.manage-items', compact('permintaan'));
-    }
-
-    // Form edit header permintaan
-    public function edit(PermintaanHeader $permintaan)
-    {
-        $user = Auth::user();
-        
-        if (!$user->isAdminGudang() || 
-            $permintaan->user_id !== $user->id || 
-            !$permintaan->canBeEdited()) {
-            abort(403, 'Permintaan tidak dapat diedit');
-        }
-
-        return view('permintaan.edit', compact('permintaan'));
-    }
-
-    // Update header permintaan
-    public function update(Request $request, PermintaanHeader $permintaan)
-    {
-        $user = Auth::user();
-        
-        if (!$user->isAdminGudang() || 
-            $permintaan->user_id !== $user->id || 
-            !$permintaan->canBeEdited()) {
-            abort(403, 'Permintaan tidak dapat diedit');
-        }
-
-        $validated = $request->validate([
-            'judul_permintaan' => 'required|string|max:255',
-            'tanggal_dibutuhkan' => 'required|date|after:today',
-            'tingkat_prioritas' => 'required|in:urgent,penting,routine,non_routine',
-            'catatan_permintaan' => 'nullable|string'
-        ]);
-
-        $oldPriority = $permintaan->tingkat_prioritas;
-        
-        $permintaan->update($validated);
-
-        // Log jika priority berubah
-        if ($oldPriority !== $permintaan->tingkat_prioritas) {
-            PermintaanActivity::log(
-                $permintaan->id,
-                $user->id,
-                'priority_changed',
-                "Prioritas diubah dari {$oldPriority} ke {$permintaan->tingkat_prioritas}"
-            );
-        }
-
-        return redirect()->route('permintaan.show', $permintaan)
-            ->with('success', 'Permintaan berhasil diupdate');
-    }
-
-    // Submit permintaan (status dari draft ke pending)
+    /**
+     * Submit permintaan (ubah status dari draft ke pending)
+     */
     public function submit(PermintaanHeader $permintaan)
     {
         $user = Auth::user();
         
-        if (!$user->isAdminGudang() || 
-            $permintaan->user_id !== $user->id || 
-            !$permintaan->isDraft()) {
-            abort(403, 'Permintaan tidak dapat disubmit');
+        if (!$user->isAdminGudang() || $permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses');
         }
-
-        // Pastikan ada minimal 1 item
-        if ($permintaan->items()->count() === 0) {
-            return back()->withErrors(['error' => 'Tambahkan minimal 1 item sebelum submit']);
+        
+        if ($permintaan->status !== 'draft') {
+            return back()->withErrors(['error' => 'Hanya permintaan draft yang bisa disubmit']);
+        }
+        
+        // Cek apakah ada item
+        if ($permintaan->items()->count() == 0) {
+            return back()->withErrors([
+                'error' => 'Tidak bisa submit permintaan tanpa item barang'
+            ]);
         }
 
         DB::beginTransaction();
@@ -194,119 +353,19 @@ class PermintaanController extends Controller
                 'submitted_at' => now()
             ]);
 
+            // Log activity
             PermintaanActivity::log(
                 $permintaan->id,
                 $user->id,
                 'submitted',
-                "Permintaan disubmit untuk review"
+                "Permintaan '{$permintaan->judul_permintaan}' disubmit untuk review",
+                ['total_items' => $permintaan->total_items]
             );
-
-            DB::commit();
-
-            return redirect()->route('permintaan.show', $permintaan)
-                ->with('success', 'Permintaan berhasil disubmit dan menunggu review');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
-        }
-    }
-
-    // Hapus permintaan (hanya draft dan milik sendiri)
-    public function destroy(PermintaanHeader $permintaan)
-    {
-        $user = Auth::user();
-        
-        if (!$user->isAdminGudang() || 
-            $permintaan->user_id !== $user->id || 
-            !$permintaan->isDraft()) {
-            abort(403, 'Permintaan tidak dapat dihapus');
-        }
-
-        DB::beginTransaction();
-        
-        try {
-            // Hapus gambar jika ada
-            foreach ($permintaan->items as $item) {
-                if ($item->gambar_path) {
-                    Storage::disk('public')->delete($item->gambar_path);
-                }
-            }
-
-            $judul = $permintaan->judul_permintaan;
-            $permintaan->delete();
 
             DB::commit();
 
             return redirect()->route('permintaan.index')
-                ->with('success', "Permintaan '{$judul}' berhasil dihapus");
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
-        }
-    }
-
-    // Method khusus untuk purchasing review
-    public function review(Request $request, PermintaanHeader $permintaan)
-    {
-        $user = Auth::user();
-        
-        if (!$user->isPurchasing()) {
-            abort(403, 'Hanya Purchasing yang bisa review');
-        }
-
-        $validated = $request->validate([
-            'action' => 'required|in:approve_all,reject_all',
-            'catatan_review' => 'nullable|string'
-        ]);
-
-        DB::beginTransaction();
-        
-        try {
-            if ($validated['action'] === 'approve_all') {
-                $permintaan->items()->update([
-                    'status' => 'approved',
-                    'catatan_review' => $validated['catatan_review'],
-                    'reviewed_by' => $user->id,
-                    'reviewed_at' => now()
-                ]);
-
-                $permintaan->update([
-                    'status' => 'approved',
-                    'reviewed_at' => now(),
-                    'approved_items' => $permintaan->total_items
-                ]);
-
-                $message = 'Semua item disetujui';
-
-            } else {
-                $permintaan->items()->update([
-                    'status' => 'rejected',
-                    'catatan_review' => $validated['catatan_review'],
-                    'reviewed_by' => $user->id,
-                    'reviewed_at' => now()
-                ]);
-
-                $permintaan->update([
-                    'status' => 'rejected',
-                    'reviewed_at' => now(),
-                    'rejected_items' => $permintaan->total_items
-                ]);
-
-                $message = 'Semua item ditolak';
-            }
-
-            PermintaanActivity::log(
-                $permintaan->id,
-                $user->id,
-                'status_changed',
-                $message . ' oleh ' . $user->name
-            );
-
-            DB::commit();
-
-            return back()->with('success', 'Review berhasil disimpan');
+                ->with('success', 'Permintaan berhasil disubmit untuk review!');
 
         } catch (\Exception $e) {
             DB::rollback();

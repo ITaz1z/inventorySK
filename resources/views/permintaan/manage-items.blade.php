@@ -63,11 +63,11 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Tanggal Permintaan:</td>
-                            <td>{{ $permintaan->tanggal_permintaan->format('d M Y') }}</td>
+                            <td><strong>{{ $permintaan->tanggal_permintaan->format('d/m/Y') }}</strong></td>
                         </tr>
                         <tr>
                             <td class="text-muted">Dibutuhkan:</td>
-                            <td>{{ $permintaan->tanggal_dibutuhkan->format('d M Y') }}</td>
+                            <td><strong>{{ $permintaan->tanggal_dibutuhkan->format('d/m/Y') }}</strong></td>
                         </tr>
                         <tr>
                             <td class="text-muted">Prioritas:</td>
